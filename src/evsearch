@@ -1,0 +1,171 @@
+#!/bin/sh
+#
+#= Evutils - Evsearch
+#
+# Use my evmenu to search and select a file.
+#
+#
+#== Synopsis
+#
+# evsearch [options] --dir /dir/path ...
+# evsearch [options] /dir/path ...
+# evsearch [options] -- /dir/path ...
+#
+#
+#== Options
+#
+# -n, --non-recursive
+#    Don't search through directories recursively.
+#
+# -h, --hidden
+#    Include hidden files / directories in the search.
+#
+# -d /dir/path, --dir /dir/path
+#    Directories to search through. If unset, current working directory is used.
+#    Pass multiple --dir to search through multiple directories.
+#
+# -t filetype,--type filetype
+#    Filetype to search for. If unset, all filetypes are searched. To search for
+#    multiple filetypes, separate filetypes using :, e.g. --type FILE:DIR.
+#    Filetypes:
+#    FILE = Search for files.
+#    DIR = Search for directories.
+# 
+# -f filter, --filter filter
+#    Filter search. To use multiple filters, separate filters using :, e.g. --filter TXT:DOC.
+#    Filters:
+#    TXT = Whitelists plain-text files
+#    DOC = Whitelists document files
+#    IMG = Whitelists image files
+#    VID = Whitelists video files
+#    ZIP = Whitelists archive files
+# 
+# --gui
+#    Attempt to use --gui option of evmenu if within a graphical environment.
+#
+# --term
+#    Use --term option of evmenu.
+#
+# -p prompt, --prompt prompt
+#    Use a different prompt for evmenu. Default is "Select".
+#
+# -v, --preview
+#    Show previews of a hovered file when using the terminal menu of evmenu.
+#
+# -z, --fuzzy
+#    Use --fuzzy option of evmenu.
+
+
+
+. "$EVUTILS_HOME/lib/log"
+. "$EVUTILS_HOME/lib/search"
+. "$EVUTILS_HOME/lib/list"
+
+_prompt="Select"
+
+_evmenu_opts=""
+_search_opts=""
+_filters=""
+_dirs=""
+
+# Get search results.
+# @returns {list} Search results.
+#
+_get_searches() {
+    if [ "$_dirs" ]; then
+        eval search_files "$_search_opts" --dir "$_dirs"
+    else
+        eval search_files "$_search_opts"
+    fi
+}
+
+# Run.
+#
+_run() {
+    if ! { [ -t 0 ] || [ -p /dev/stdin ]; }; then
+        _evmenu_opts="${_evmenu_opts} --gui"
+    elif ! echo "$_evmenu_opts" | grep -Fq -- "--gui"; then
+        _evmenu_opts="${_evmenu_opts} --term"
+    fi
+
+    selection=$(_get_searches | eval evmenu "$_evmenu_opts" --prompt "$_prompt")
+
+    if ! [ "$selection" ]; then
+        exit
+    fi
+    echo "$selection"
+}
+
+main() {
+    while [ "$1" ]; do
+        case $1 in
+            -n|--non-recursive)
+                _search_opts="${_search_opts} --non-recursive"
+                ;;
+            -h|--hidden)
+                _search_opts="${_search_opts} --hidden"
+                ;;
+            -d|--dir)
+                if [ -d "$2" ]; then
+                    _dirs=$(list_cat "$_dirs" "$2" ":")
+                else
+                    log_warning "Invalid directory ${2}. Ignoring..."
+                fi
+                shift
+                ;;
+            -t|--type)
+                _search_opts="${_search_opts} --type '${2}'"
+                shift
+                ;;
+            -f|--filter)
+                _search_opts="${_search_opts} --filter '${2}'"
+                shift
+                ;;
+            --gui)
+                _evmenu_opts="${_evmenu_opts} --gui"
+                ;;
+            --term)
+                _evmenu_opts="${_evmenu_opts} --term"
+                ;;
+            -p|--prompt)
+                _prompt=$2
+                shift
+                ;;
+            -v|--preview)
+                _evmenu_opts="${_evmenu_opts} --preview"
+                ;;
+            -z|--fuzzy)
+                _evmenu_opts="${_evmenu_opts} --fuzzy"
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -?*)
+                log_warning "Unknown option ${1}. Ignoring..."
+                ;;
+            *)
+                if [ -d "$1" ]; then
+                    _dirs=$(list_cat "$_dirs" "$1" ":")
+                else
+                    log_warning "Invalid directory ${1}. Ignoring..."
+                fi
+                ;;
+        esac
+        shift
+    done
+
+    while [ "$1" ]; do
+        if [ -d "$1" ]; then
+            _dirs=$(list_cat "$_dirs" "$1" ":")
+        else
+            log_warning "Invalid directory ${1}. Ignoring..."
+        fi
+        shift
+    done
+
+    _run
+}
+
+main "$@"
+

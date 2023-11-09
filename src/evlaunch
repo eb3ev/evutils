@@ -1,0 +1,143 @@
+#!/bin/sh
+#
+#= Evutils - Evlaunch
+#
+# Launch installed programs through evmenu.
+#
+#
+#== Synopsis
+#
+# evlaunch [options]
+#
+#== Options
+#
+# -a, --all
+#    Show all available programs in $PATH. Otherwise only desktop applications
+#    installed that are defined in $EVUTILS_HOME/lib/data/desktop-applications
+#    are shown.
+#
+# -h, --use-history
+#    Recently launched programs will be shown on top of the list.
+#
+# -p prompt, --prompt prompt
+#    Use a different prompt for evmenu. Default is "Launch".
+#
+# --no-fork
+#    The program is forked by default. Pass option to disable.
+#
+# -d, --dry-run
+#    Print the program instead of running it.
+
+
+
+. "$EVUTILS_HOME/lib/log"
+. "$EVUTILS_HOME/lib/program"
+. "$EVUTILS_HOME/lib/list"
+. "$EVUTILS_HOME/lib/cache"
+. "$EVUTILS_HOME/lib/config"
+
+_show_all_programs=1
+_use_history=1
+_prompt="Launch"
+_fork=0
+_dry_run=1
+
+# Get the program list to show.
+# @returns {list} Programs to show.
+#
+_get_programs() {
+    sync_program_cache
+    programs=""
+
+    if [ "$_show_all_programs" -eq 0 ]; then
+        programs=$(cat "$EVUTILS_PROGRAM_CACHE")
+    else
+        programs=$(get_desktop_applications)
+    fi
+
+    if [ "$_use_history" -eq 0 ]; then
+        if ! [ -e "$EVLAUNCH_HISTFILE" ]; then
+            create_cache_dir
+            if [ "$_show_all_programs" -eq 0 ]; then
+                cp "$EVUTILS_PROGRAM_CACHE" "$EVLAUNCH_HISTFILE"
+            else
+                echo "$programs" > "$EVLAUNCH_HISTFILE"
+            fi
+        fi
+
+        if [ "$_show_all_programs" -eq 0 ]; then
+            sync_list_with_list "$EVLAUNCH_HISTFILE" "$EVUTILS_PROGRAM_CACHE"
+        else
+            sync_list_with_list "$EVLAUNCH_HISTFILE" "$programs"
+        fi
+
+        programs=$(cat "$EVLAUNCH_HISTFILE")
+    fi
+
+    echo "$programs"
+}
+
+# Prompt user for program to launch.
+# @returns {program} Selected program.
+#
+_get_program() {
+    _get_programs | evmenu --prompt "$_prompt"
+}
+
+# Run selected program.
+#
+_run() {
+    program=$(_get_program)
+    if ! [ "$program" ]; then
+        exit
+    fi
+    if [ "$_dry_run" -eq 0 ]; then
+        if [ "$_fork" -eq 0 ]; then
+            eval echo "$program &"
+        else
+            eval echo "$program"
+        fi
+    else
+        if [ "$_use_history" -eq 0 ]; then
+            move_to_top --file "$EVLAUNCH_HISTFILE" -- "$program"
+        fi
+        if [ "$_fork" -eq 0 ]; then
+            eval "$program &"
+        else
+            eval "$program"
+        fi
+    fi
+}
+
+main() {
+    while [ "$1" ]; do
+        case $1 in
+            -a|--all)
+                _show_all_programs=0
+                ;;
+            -h|--use-history)
+                _use_history=0
+                ;;
+            -p|--prompt)
+                _prompt=$2
+                shift
+                ;;
+            --no-fork)
+                _fork=1
+                ;;
+            -d|--dry-run)
+                _dry_run=0
+                ;;
+            -?*)
+                log_warning "Unknown option ${1}. Ignoring..."
+                ;;
+        esac
+
+        shift
+    done
+
+    _run
+}
+
+main "$@"
+

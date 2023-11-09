@@ -1,0 +1,51 @@
+#!/bin/sh
+#
+#= Evutils - Evspeedtest
+#
+# Run speedtest and display results in a notification.
+#
+#
+#== Synopsis
+#
+# evspeedtest
+
+
+
+. "$EVUTILS_HOME/lib/log"
+. "$EVUTILS_HOME/lib/program"
+. "$EVUTILS_HOME/lib/list"
+
+# Check to see if speedtest is installed.
+#
+_pre() {
+    if is_not_installed "speedtest"; then
+        log_error "speedtest is not installed. Exiting..."
+        exit 1
+    fi
+}
+
+# Run speedtest.
+#
+_run() {
+    log_status "Running speedtest..."
+    speedtest_result=$(speedtest --simple --secure 2>/dev/null)
+    if ! [ "$speedtest_result" ]; then
+        log_error "No Internet Connection. Exiting..."
+        exit 1
+    fi
+    ping=$(get_row --idx 1 --list "$speedtest_result")
+    download_speed=$(get_row --idx 2 --list "$speedtest_result")
+    upload_speed=$(get_row --idx 3 --list "$speedtest_result")
+    ping="${ping##*: }"
+    download_speed="${download_speed##*: }"
+    upload_speed="${upload_speed##*: }"
+    log_status "${ping}  ${download_speed}  ${upload_speed}"
+}
+
+main() {
+    _pre
+    _run
+}
+
+main
+

@@ -1,0 +1,75 @@
+#!/bin/sh
+#
+#= Evutils - Window Library
+#
+# Library for handling windows.
+
+
+
+. "$EVUTILS_HOME/lib/std"
+. "$EVUTILS_HOME/lib/list"
+
+# Get a list active windows.
+# List format:
+# <Window ID> , <Desktop Name> , <Window PID> , <Host Name> , <Window Title>
+# @returns {list} Active windows.
+#
+get_windows() {
+    win_list=$(wmctrl -l -p)
+    win_ids=$(echo "$win_list" | awk '{print $1}')
+    desktop_ids=$(echo "$win_list" | awk '{print $2}')
+    win_pids=$(echo "$win_list" | awk '{print $3}')
+    hostnames=$(echo "$win_list" | awk '{print $4}')
+    win_titles=$(echo "$win_list" | awk -F " " -v N=5 '{sep=""; for (i = N; i <= NF; i++) { printf("%s%s",sep,$i); sep=OFS}; printf("\n")}')
+    desktop_names=""
+    desktop_list=$(wmctrl -d)
+    IFS=$CHAR_NL
+    for desktop_id in $desktop_ids; do
+        desktop_name=$(echo "$desktop_list" | awk "/^${desktop_id} / {print \$9}")
+        desktop_names=$(list_cat "$desktop_names" "$desktop_name")
+    done
+
+    tmp=$(mktemp)
+    tmp1=$(mktemp)
+    tmp2=$(mktemp)
+
+    echo "$win_ids" > "$tmp"
+    echo "$desktop_names" > "$tmp1"
+    paste "$tmp" "$tmp1" > "$tmp2"
+
+    cat "$tmp2" > "$tmp"
+    echo "$win_pids" > "$tmp1"
+    paste "$tmp" "$tmp1" > "$tmp2"
+
+    cat "$tmp2" > "$tmp"
+    echo "$hostnames" > "$tmp1"
+    paste "$tmp" "$tmp1" > "$tmp2"
+
+    cat "$tmp2" > "$tmp"
+    echo "$win_titles" > "$tmp1"
+    paste "$tmp" "$tmp1" > "$tmp2"
+
+    sed -i 's/	/ , /;s/	/ , /;s/	/ , /;s/	/ , /;' "$tmp2"
+    cat "$tmp2"
+
+    rm -f -- "$tmp" "$tmp1" "$tmp2"
+}
+
+# Kill a window.
+# @param {string} 1 Window ID.
+#
+kill_window() {
+    wmctrl -i -c "$1"
+}
+
+# Kill all windows.
+#
+kill_all_windows() {
+    win_ids=$(wmctrl -l | awk '{print $1}')
+    IFS=$CHAR_NL
+    for win_id in $win_ids; do
+        unset IFS
+        kill_window "$win_id"
+    done
+}
+

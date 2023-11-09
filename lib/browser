@@ -1,0 +1,104 @@
+#!/bin/sh
+#
+#= Evutils - Browser Library
+#
+# Library to deal with browsers and URLs.
+
+
+
+. "$EVUTILS_HOME/lib/std"
+. "$EVUTILS_HOME/lib/program"
+. "$EVUTILS_HOME/lib/list"
+. "$EVUTILS_HOME/lib/config"
+
+# Browsers data.
+EVUTILS_DATA_BROWSERS="$EVUTILS_HOME/lib/data/browser"
+
+# See if the argument is a valid URL.
+# @param {url} 1 The URL.
+# @returns {bool} True if valid and false otherwise.
+#
+is_url() {
+    if [ "$(filter --filter URL --list "$1")" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Get the browser command from $EVUTILS_DATA_BROWSERS.
+# @param {string} 1 Browser name / key.
+# @returns {string} Browser command.
+#
+get_browser_cmd() {
+    get_val --key "$1" --idx 2 --delim "," --file "$EVUTILS_DATA_BROWSERS"
+}
+
+# Get the browser new tab option from $EVUTILS_DATA_BROWSERS.
+# @param {string} 1 Browser name / key.
+# @returns {string} Browser new tab option.
+#
+get_browser_new_tab_opt() {
+    get_val --key "$1" --idx 3 --delim "," --file "$EVUTILS_DATA_BROWSERS"
+}
+
+# Get the browser new win option from $EVUTILS_DATA_BROWSERS.
+# @param {string} 1 Browser name / key.
+# @returns {string} Browser new win option.
+#
+get_browser_new_win_opt() {
+    get_val --key "$1" --idx 4 --delim "," --file "$EVUTILS_DATA_BROWSERS"
+}
+
+# Get all of the browser names from $EVUTILS_DATA_BROWSERS.
+# @returns {list} Browser names.
+#
+get_all_browsers() {
+    get_col --idx 1 --delim "," --file "$EVUTILS_DATA_BROWSERS"
+}
+
+# Get all of the browser names from $EVUTILS_DATA_BROWSERS that is installed.
+# @returns {list} Browsers that are installed.
+#
+get_available_browsers() {
+    new_browsers=""
+    browsers=$(get_all_browsers)
+
+    IFS=$CHAR_NL
+    for browser in $browsers; do
+        browser_cmd=$(get_browser_cmd "$browser")
+        if is_installed "$browser_cmd"; then
+            new_browsers=$(list_cat "$new_browsers" "$browser")
+        fi
+    done
+
+    echo "$new_browsers"
+}
+
+# Returns true if the browser is installed and supported by evutils and false
+# otherwise.
+# @param {string} 1 Browser name / key.
+# @returns {bool} True if browser is installed and supported and false otherwise.
+#
+is_available_browser() {
+    if get_available_browsers | grep -Fqx "$1"; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Like get_available_browsers but excluding the browser currently set in configuration.
+# @returns {list} Browsers that are installed and not already set in configuration.
+#
+get_alt_browsers() {
+    browserrc=$(cat "$EVBROWSERRC" 2>/dev/null) 
+    curr_browser=${browserrc:-$EVUTILS_BROWSER}
+    available_browsers=$(get_available_browsers)
+    if [ "$curr_browser" ]; then
+        list_rm --item "$curr_browser" --list "$available_browsers"
+    else
+        echo "$available_browsers"
+    fi
+}
+

@@ -1,0 +1,160 @@
+#!/bin/sh
+#
+#= Evutils - Evterm
+#
+# A wrapper for opening a terminal.
+#
+#
+#== Synopsis
+#
+# evterm [options]
+# evterm [options] command ...
+# evterm [options] -- command ...
+#
+#
+#== Options
+#
+# -t terminal, --term terminal
+#    Override the terminal set in configuration.
+# 
+# --term-opts options
+#    Additional terminal options to add for the set terminal.
+#
+# --no-fork
+#    The terminal application is forked by default. Pass option to disable.
+#
+# --cmd command
+#    The command to run when terminal is opened. Passing multiple commands will
+#    open multiple terminals running each command.
+#
+# -d, --dry-run
+#    Print the computed command instead of running it.
+
+
+
+. "$EVUTILS_HOME/lib/log"
+. "$EVUTILS_HOME/lib/std"
+. "$EVUTILS_HOME/lib/list"
+. "$EVUTILS_HOME/lib/program"
+. "$EVUTILS_HOME/lib/config"
+
+_term=""
+_term_opts=""
+_fork=0
+_cmds=""
+_dry_run=1
+
+# Set the terminal to use.
+#
+_set_term() {
+    if [ "$_term" ]; then
+        return
+    fi
+
+    if ! [ "$EVUTILS_TERM" ]; then
+        log_error "EVUTILS_TERM in configuration file is unset. Exiting..."
+    fi
+
+    if is_not_installed "$EVUTILS_TERM"; then
+        log_error "${EVUTILS_TERM} is not installed. Exiting..."
+    fi
+
+    _term=$EVUTILS_TERM
+}
+
+# Run the terminal with startup command.
+#
+_run_term_command() {
+    IFS=$CHAR_NL
+    for cmd in $_cmds; do
+        unset IFS
+        if [ "$_fork" -eq 0 ]; then
+            if [ "$_dry_run" -eq 0 ]; then
+                eval echo "${_term} ${_term_opts} -e sh -c ${cmd} &"
+            else
+                eval "$_term" "$_term_opts" -e "sh -c '$cmd'" &
+            fi
+        else
+            if [ "$_dry_run" -eq 0 ]; then
+                eval echo "${_term} ${_term_opts} -e sh -c ${cmd}"
+            else
+                eval "$_term" "$_term_opts" -e "sh -c '$cmd'"
+            fi
+        fi
+    done
+    exit
+}
+
+# Run the terminal.
+#
+_run() {
+    if [ "$_cmds" ]; then
+        _run_term_command
+    else
+        if [ "$_fork" -eq 0 ]; then
+            if [ "$_dry_run" -eq 0 ]; then
+                eval echo "$_term $_term_opts &"
+            else
+                eval "$_term $_term_opts &"
+            fi
+        else
+            if [ "$_dry_run" -eq 0 ]; then
+                eval echo "$_term $_term_opts"
+            else
+                eval "$_term $_term_opts"
+            fi
+        fi
+    fi
+}
+
+main() {
+    while [ "$1" ]; do
+        case $1 in
+            --term)
+                if is_installed "$2"; then
+                    _term=$2
+                else
+                    log_warning "${2} not installed. Ignoring..."
+                fi
+                shift
+                ;;
+            --term-opts)
+                _term_opts=$2
+                shift
+                ;;
+            --no-fork)
+                _fork=1
+                ;;
+            --cmd)
+                _cmds="${_cmds} '${2}'"
+                shift
+                ;;
+            -d|--dry-run)
+                _dry_run=0
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -?*)
+                log_warning "Unknown option ${1}. Ignoring..."
+                ;;
+            *)
+                _cmds="${_cmds} '${1}'"
+                ;;
+        esac
+
+        shift
+    done
+
+    while [ "$1" ]; do
+        _cmds=$(list_cat "$_cmds" "$1")
+        shift
+    done
+
+    _set_term
+    _run
+}
+
+main "$@"
+

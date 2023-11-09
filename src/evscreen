@@ -1,0 +1,343 @@
+#!/bin/sh
+#
+#= Evutils - Evscreen
+#
+# Screen layout setter using xrandr.
+#
+#
+#== Synopsis
+#
+# evscreen [options]
+#
+#
+#== Options
+#
+# -s, --save
+#    Save the screen layout setter command to a script file defined in
+#    configuration.
+# 
+# -p, --use-presets
+#    Use a preset screen layout setter options to run from a preset file defined
+#    in configuration.
+# 
+# -d, --dry-run
+#    Print the computed screen layout setter command instead of running it.
+
+
+
+. "$EVUTILS_HOME/lib/log"
+. "$EVUTILS_HOME/lib/std"
+. "$EVUTILS_HOME/lib/screen"
+. "$EVUTILS_HOME/lib/list"
+. "$EVUTILS_HOME/lib/file"
+
+_save=1
+_use_presets=1
+_dry_run=1
+
+_evmenu_opts=""
+_setter_opts=""
+
+# Get the wallpaper presets that matches the device's name inside $EVUTILS_SCREENLAYOUT_PRESETS.
+# @returns {list} Screen layout presets.
+#
+_get_device_presets() {
+    hostname=$(get_hostname)
+    grep -e "^${hostname} ," -- "$EVUTILS_SCREENLAYOUT_PRESETS"
+}
+
+# Get number of screens set in the screen layout preset setting string.
+# @param {string} 1 Setting string.
+# @returns {u_int} Number of screens set.
+#
+_get_preset_setting_num_screens() {
+    i=0
+    IFS=:
+    for _ in $1; do
+        unset IFS
+        i=$((i + 1))
+    done
+
+    echo "$i"
+}
+
+# Updates the screen layout presets list to match the current screen count.
+# @param {list} 1 Screen layout presets list.
+# @returns {list} New screen layout presets list.
+#
+_update_presets_to_screen_count() {
+    new_list=""
+    screen_count=$(get_screen_count)
+
+    IFS=$CHAR_NL
+    for preset in $1; do
+        unset IFS
+        setting_string=$(get_col --list "$preset" --idx 3)
+        if [ "$(_get_preset_setting_num_screens "$setting_string")" -le "$screen_count" ]; then
+            new_list=$(list_cat "$new_list" "$preset")
+        fi
+    done
+
+    echo "$new_list"
+}
+
+# Parse setting string into setter options.
+# @param {string} 1 Setting string.
+#
+_parse_setting_string() {
+    primary_screen_set=1
+    all_screens=$(get_all_screen_names)
+    screens_set=""
+    IFS=:
+    for screen_setting in $1; do
+        screen_name=$(get_col --idx 1 --delim ";" --list "$screen_setting")
+        if echo "$screens_set" | grep -Fq -e "$screen_name"; then
+            log_error "${screen_name} already set. Exiting..."
+            exit 1
+        fi
+        if get_screen_names | grep -Fqx -e "$screen_name"; then
+            if [ "$primary_screen_set" -eq 1 ]; then
+                _setter_opts="${_setter_opts} --output '${screen_name}' --primary"
+            else
+                _setter_opts="${_setter_opts} --output '${screen_name}'"
+            fi
+        else
+            log_error "Preset setting - screen ${screen_name} option unavailable. Exiting..."
+            exit 1
+        fi
+
+        screen_res=$(get_col --idx 2 --delim ";" --list "$screen_setting")
+        if get_screen_resolutions "$screen_name" | grep -Fq -e "$screen_res"; then
+            _setter_opts="${_setter_opts} --mode ${screen_res}"
+        else
+            log_error "Preset setting - ${screen_name} doesn't have screen resolution ${screen_res}. Exiting..."
+            exit 1
+        fi
+
+        screen_rot=$(get_col --idx 3 --delim ";" --list "$screen_setting")
+        if echo "$SCREENLAYOUT_ROTATION_OPTS" | grep -q -e "^${screen_rot},"; then
+            screen_rot_opt=$(get_val --idx 2 --key "$screen_rot" --delim "," --list "$SCREENLAYOUT_ROTATION_OPTS")
+            _setter_opts="${_setter_opts} ${screen_rot_opt}"
+        else
+            log_error "Preset setting - invalid screen rotation option ${screen_rot}. Exiting..."
+            exit 1
+        fi
+
+        if [ "$primary_screen_set" -eq 1 ]; then
+            primary_screen_set=0
+            screens_set=$(list_cat "$screens_set" "$screen_name")
+            all_screens=$(list_rm --list "$all_screens" -- "$screen_name")
+            continue
+        fi
+
+        screen_pos=$(get_col --idx 4 --delim ";" --list "$screen_setting")
+        screen_pos_relative_to_screen=${screen_pos##*@}
+        screen_pos=${screen_pos%%@*}
+        if echo "$SCREENLAYOUT_POS_OPTS" | grep -q -e "^${screen_pos},"; then
+            screen_pos_opt=$(get_val --idx 2 --key "$screen_pos" --delim "," --list "$SCREENLAYOUT_POS_OPTS")
+            _setter_opts="${_setter_opts} ${screen_pos_opt}"
+        else
+            log_error "Preset setting - invalid screen position option ${screen_pos}. Exiting..."
+            exit 1
+        fi
+        if echo "$screens_set" | grep -Fq -e "$screen_pos_relative_to_screen"; then
+            _setter_opts="${_setter_opts} ${screen_pos_relative_to_screen}"
+        else
+            echo "$screens_set"
+            log_error "Preset setting - cannot set relative position of ${screen_name}, ${screen_pos_relative_to_screen} is unset. Exiting..."
+            exit 1
+        fi
+        screens_set=$(list_cat "$screens_set" "$screen_name")
+        all_screens=$(list_rm --list "$all_screens" -- "$screen_name")
+    done
+
+    IFS=$CHAR_NL
+    for unset_screen in $all_screens; do
+        _setter_opts="${_setter_opts} --output '${unset_screen}' --off"
+    done
+}
+
+# Set the setter options based on a preset.
+#
+_set_preset_setter_opts() {
+    if ! [ "$EVUTILS_SCREENLAYOUT_PRESETS" ]; then
+        log_error "screenlayout_presets unset in configuration file. Exiting..."
+        exit 1
+    elif ! [ -r "$EVUTILS_SCREENLAYOUT_PRESETS" ]; then
+        log_error "Invalid preset file ${EVUTILS_SCREENLAYOUT_PRESETS}. Exiting..."
+        exit 1
+    fi
+
+    screenlayout_presets=$(_get_device_presets)
+    screenlayout_presets=$(_update_presets_to_screen_count "$screenlayout_presets")
+
+    if ! [ "$screenlayout_presets" ]; then
+        log_status "No presets available. Exiting..."
+        exit 1
+    fi
+
+    preset_name=$(get_col --idx 2 --list "$screenlayout_presets" | eval evmenu "$_evmenu_opts" --prompt "Screen Layout Presets")
+
+    if ! [ "$preset_name" ]; then
+        exit
+    fi
+
+    hostname=$(get_hostname)
+    setting_string=$(get_val --key "${hostname} , ${preset_name}" --idx 3 --list "$screenlayout_presets")
+    
+    _parse_setting_string "$setting_string"
+}
+
+# Set the setter options.
+#
+_set_setter_opts() {
+    screens=$(get_screen_names)
+    all_screens=$(get_all_screen_names)
+    screens_set=""
+
+    if ! [ "$screens" ]; then
+        log_error "No connected screens. Exiting..."
+        exit 1
+    fi
+
+    # Select primary screen.
+    primary_screen=$(echo "$screens" | eval evmenu "$_evmenu_opts" --prompt "'Set Primary Screen'")
+    if ! [ "$primary_screen" ]; then
+        exit
+    fi
+    all_screens=$(list_rm --list "$all_screens" -- "$primary_screen")
+    screens=$(list_rm --list "$screens" -- "$primary_screen")
+    screens_set=$(list_cat "$screens_set" "$primary_screen")
+    _setter_opts="${_setter_opts} --output '${primary_screen}' --primary"
+
+    # Select primary screen resolution.
+    primary_screen_res=$(get_screen_resolutions "$primary_screen" | eval evmenu "$_evmenu_opts" --prompt "'Set ${primary_screen} Resolution'")
+    if ! [ "$primary_screen_res" ]; then
+        exit
+    fi
+    _setter_opts="${_setter_opts} --mode ${primary_screen_res}"
+
+    # Select primary screen rotation.
+    primary_screen_rot=$(get_keys --delim "," --list "$SCREENLAYOUT_ROTATION_OPTS" | eval evmenu "$_evmenu_opts" --prompt "'Set ${primary_screen} Rotation'")
+    if ! [ "$primary_screen_rot" ]; then
+        exit
+    fi
+    primary_screen_rot_opt=$(get_val --idx 2 --key "$primary_screen_rot" --delim "," --list "$SCREENLAYOUT_ROTATION_OPTS")
+
+    _setter_opts="${_setter_opts} ${primary_screen_rot_opt}"
+
+    # Set secondary screens.
+    while [ "$screens" ]; do
+        # Select screen.
+        screen=$(echo "$screens" | eval evmenu "$_evmenu_opts" --prompt "'Select Secondary Screen'")
+        if ! [ "$screen" ]; then
+            exit
+        fi
+        all_screens=$(list_rm --list "$all_screens" -- "$screen")
+        screens=$(list_rm --list "$screens" -- "$screen")
+        _setter_opts="${_setter_opts} --output '${screen}'"
+
+        # Select screen resolution.
+        screen_res_opts=$(get_screen_resolutions "$screen")
+        screen_res_opts=$(list_cat "$screen_res_opts" "Off")
+        screen_res=$(echo "$screen_res_opts" | eval evmenu "$_evmenu_opts" --prompt "'Set ${screen} Resolution'")
+        if ! [ "$screen_res" ]; then
+            exit
+        fi
+        case $screen_res in
+            Off)
+                _setter_opts="${_setter_opts} --off"
+                continue
+                ;;
+            *)
+                _setter_opts="${_setter_opts} --mode ${screen_res}"
+                ;;
+        esac
+
+        # Select screen position.
+        screen_pos=$(get_keys --delim "," --list "$SCREENLAYOUT_POS_OPTS" | eval evmenu "${_evmenu_opts}" --prompt "'Set ${screen} Position'")
+        if ! [ "$screen_pos" ]; then
+            exit
+        fi
+        screen_pos_relative_to_screen=$(echo "$screens_set" | eval evmenu "$_evmenu_opts" --prompt "'${screen} ${screen_pos}'")
+        if ! [ "$screen_pos_relative_to_screen" ]; then
+            exit
+        fi
+        screen_pos_opt=$(get_val --idx 2 --key "$screen_pos" --delim "," --list "$SCREENLAYOUT_POS_OPTS")
+
+        _setter_opts="${_setter_opts} ${screen_pos_opt} ${screen_pos_relative_to_screen}"
+
+        # Select screen rotation.
+        screen_rot=$(get_keys --delim "," --list "$SCREENLAYOUT_ROTATION_OPTS" | eval evmenu "$_evmenu_opts" --prompt "'Set ${screen} Rotation'")
+        if ! [ "$screen_rot" ]; then
+            exit
+        fi
+        screen_rot_opt=$(get_val --idx 2 --key "$screen_rot" --delim "," --list "$SCREENLAYOUT_ROTATION_OPTS")
+
+        _setter_opts="${_setter_opts} ${screen_rot_opt}"
+        screens_set=$(list_cat "$screens_set" "$screen")
+    done
+
+    IFS=$CHAR_NL
+    for unset_screen in $all_screens; do
+        _setter_opts="${_setter_opts} --output '${unset_screen}' --off"
+    done
+}
+
+# Set the screen layout.
+#
+_run() {
+    if [ "$_dry_run" -eq 0 ]; then
+        eval echo "xrandr ${_setter_opts}"
+    else
+        if [ "$_save" -eq 0 ]; then
+            if [ "$EVUTILS_SCREENLAYOUTRC" ]; then
+                include=$(printf "sleep 0.5\nxrandr %s" "$_setter_opts")
+                { evmk --overwrite --shebang sh --executable --include "$include" -- "$EVUTILS_SCREENLAYOUTRC" \
+                    && log_status "Screen layout setter command set to ${EVUTILS_SCREENLAYOUTRC}"; } \
+                    || { log_error "Creating screen layout script file failed. Exiting..." && exit 1; }
+            else
+                log_warning "screenlayout_script unset in configuration file. Skipping saving..."
+            fi
+        fi
+        eval xrandr "$_setter_opts"
+        log_status "Screen layout set."
+    fi
+}
+
+main() {
+    while [ "$1" ]; do
+        case $1 in
+            -s|--save)
+                _save=0
+                ;;
+            -p|--use-presets)
+                _use_presets=0
+                ;;
+            -d|--dry-run)
+                _dry_run=0
+                ;;
+            -?*)
+                log_warning "Unknown option ${1}. Ignoring..."
+                ;;
+        esac
+        shift
+    done
+
+    if ! { [ -t 0 ] || [ -p /dev/stdin ]; }; then
+        _evmenu_opts="${_evmenu_opts} --gui"
+    else
+        _evmenu_opts="${_evmenu_opts} --term"
+    fi
+
+    if [ "$_use_presets" -eq 0 ]; then
+        _set_preset_setter_opts
+    else
+        _set_setter_opts
+    fi
+
+    _run
+}
+
+main "$@"
+

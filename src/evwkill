@@ -1,0 +1,126 @@
+#!/bin/sh
+#
+#= Evutils - Evwkill
+#
+# Window killer.
+#
+#
+#== Synopsis
+#
+# evwkill [options] --win win-id ...
+# evwkill [options] win-id ...
+# evwkill [options] -- win-id ...
+#
+#
+#== Options
+#
+# -w win-id, --win win-id
+#    The ID of the window to kill. Pass multiple --win to kill multiple windows.
+#    If unset, select from active windows to kill.
+#
+# -a, --all, --kill-all
+#    Kill all windows.
+
+
+
+. "$EVUTILS_HOME/lib/log"
+. "$EVUTILS_HOME/lib/window"
+
+_kill_all=1
+_windows=""
+
+_win_list=""
+
+# Set the window to kill.
+#
+_set_windows() {
+    if [ "$_windows" ]; then
+        return
+    fi
+
+    selection=""
+
+    echo "$_win_list"
+    if ! { [ -t 0 ] || [ -p /dev/stdin ]; }; then
+        selection=$(echo "$_win_list" | evmenu --gui --prompt "Kill")
+    else
+        selection=$(echo "$_win_list" | evmenu --term --prompt "Kill")
+    fi
+
+    if ! [ "$selection" ]; then
+        exit
+    fi
+
+    _windows=$(get_col --idx 1 --delim " , " --list "$selection")
+}
+
+# Kill the windows set.
+#
+_run() {
+    if [ "$_kill_all" -eq 0 ]; then
+        log_status "Killing all windows..."
+        kill_all_windows
+        exit
+    fi
+
+    _set_windows
+
+    IFS=$CHAR_NL
+    for win in $_windows; do
+        log_status "Killing window ${win}..."
+        kill_window "$win"
+    done
+}
+
+main() {
+    _win_list=$(get_windows)
+    if ! [ "$_win_list" ]; then
+        log_status "No windows to close. Exiting..."
+        exit
+    fi
+
+    while [ "$1" ]; do
+        case $1 in
+            -w|--win)
+                if echo "$win_list" | grep -q -e "^${2} ,"; then
+                    _windows=$(list_cat "$_windows" "$2")
+                else
+                    log_warning "Invalid Window ID ${2}. Ignoring..."
+                fi
+                shift
+                ;;
+            -a|--all|--kill-all)
+                _kill_all=0
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -?*)
+                log_warning "Unknown option ${1}. Ignoring..."
+                ;;
+            *)
+                if echo "$win_list" | grep -q -e "^${1} ,"; then
+                    _windows=$(list_cat "$_windows" "$1")
+                else
+                    log_warning "Invalid Window ID ${1}. Ignoring..."
+                fi
+                ;;
+        esac
+        shift
+    done
+
+    while [ "$1" ]; do
+        if echo "$win_list" | grep -q -e "^${1} ,"; then
+            _windows=$(list_cat "$_windows" "$1")
+        else
+            log_warning "Invalid Window ID ${1}. Ignoring..."
+        fi
+        shift
+    done
+
+    _run
+}
+
+main "$@"
+

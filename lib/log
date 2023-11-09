@@ -1,0 +1,86 @@
+#!/bin/sh
+#
+#= Evutils - Error Handling Library
+#
+# Library for handling and loggin error messages of evutils programs.
+
+
+
+. "$EVUTILS_HOME/lib/notification"
+. "$EVUTILS_HOME/lib/cache"
+. "$EVUTILS_HOME/lib/config"
+
+EVUTILS_LOG_SIZE=1000
+LOG_PREFIX=":: "
+
+# Get the time stamp when error message was created.
+#
+get_timestamp() {
+    date '+%Y-%m-%d %T'
+}
+
+# Add error message to log file.
+# @param {string} 1 Log message.
+#
+add_log() {
+    if ! [ -e "$EVUTILS_LOGS" ]; then
+        create_cache_dir
+        touch "$EVUTILS_LOGS"
+    fi
+
+    msg="$(get_timestamp) ${1}"
+
+    if [ "$(wc -l 2>/dev/null < "$EVUTILS_LOGS")" -gt "$EVUTILS_LOG_SIZE" ]; then
+        sed -i '1d' "$EVUTILS_LOGS"
+    fi
+
+    echo "$msg" >> "$EVUTILS_LOGS"
+}
+
+# Log error.
+# @param {string} 1 Error message.
+#
+log_error() {
+    err_source=${0##*/}
+    err_prefix="[ERROR]"
+    log_msg="${LOG_PREFIX}${err_prefix} ${err_source}: ${1}"
+    if [ "$EVUTILS_LOG" -eq 0 ]; then
+        add_log "$log_msg"
+    fi
+    if [ "$EVUTILS_VERBOSE" -eq 0 ]; then
+        echo "$log_msg" >&2
+    fi
+    notification "$err_source" "$1"
+}
+
+# Log warning.
+# @param {string} 1 Warning message.
+#
+log_warning() {
+    warn_source=${0##*/}
+    warn_prefix="[WARNING]"
+    log_msg="${LOG_PREFIX}${warn_prefix} ${warn_source}: ${1}"
+    if [ "$EVUTILS_LOG" -eq 0 ]; then
+        add_log "$log_msg"
+    fi
+    if [ "$EVUTILS_VERBOSE" -eq 0 ]; then
+        echo "$log_msg" >&2
+    fi
+    notification "$warn_source" "$1"
+}
+
+# Log status.
+# @param {string} 1 Status message.
+#
+log_status() {
+    status_source=${0##*/}
+    log_msg="${LOG_PREFIX}${status_source}: ${1}"
+    if [ "$EVUTILS_LOG" -eq 0 ]; then
+        add_log "$log_msg"
+    fi
+    if [ "$EVUTILS_VERBOSE" -eq 0 ]; then
+        echo "$log_msg"
+    fi
+    notification "$status_source" "$1"
+}
+

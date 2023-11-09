@@ -1,0 +1,172 @@
+#!/bin/sh
+#
+#= Evutils - File Library
+#
+# Library for dealing with files
+
+
+
+# Shebang types.
+# Shebang Name,Shebang
+SHEBANGS="\
+sh,#!/bin/sh
+bash,#!/bin/bash
+zsh,#!/bin/zsh
+dash,#!/bin/dash
+html,<!DOCTYPE html>\
+"
+
+# Returns true if the filename doesn't contain illegal characters and false otherwise.
+# @param {string} 1 Filename.
+# @returns {bool} True if the path doesn't contain any illegal characters.
+#
+is_valid_filename() {
+    case $1 in
+        *[#%\&{}\\!\'\":@\<\>*?/+\`\|=]*)
+            return 1
+            ;;
+    esac
+    return 0
+}
+
+# Returns true if the path doesn't contain any illegal characters. and false otherwise.
+# @param {path} 1 The path.
+# @returns {bool} True if the path doesn't contain any illegal characters and
+# false otherwise.
+#
+is_valid_path() {
+    case $1 in
+        *[#%\&{}\\!\'\":@\<\>*?+\`\|=]*)
+            return 1
+            ;;
+    esac
+    return 0
+}
+
+# Make a file executable.
+# @param {path} 1 The path to the file.
+# @returns {bool} Returns false if the file can't be made executable and true
+# if it was successful.
+#
+make_executable() {
+    if [ -f "$1" ]; then
+        chmod +x "$1" || return 1
+    else
+        return 1
+    fi
+}
+
+# Get the MIME type of a file.
+# @param {path} 1 The path of the file.
+# @returns {mime_type} The MIME type of the file.
+# 
+get_mime_type() {
+    file --mime-type "$1" -bL 2>/dev/null
+}
+
+# Returns true if it's a directory and false otherwise.
+# @param {path} 1 The file.
+# @returns {bool} True if it's a directory and false otherwise.
+#
+is_directory() {
+    if [ -d "$1" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Returns true if it's a plain-text file and false otherwise.
+# @param {path} 1 The file.
+# @returns {bool} True if it's a plain-text file and false otherwise.
+#
+is_plain_text_file() {
+    case $(get_mime_type "$1") in
+        text/*|\
+            application/json|\
+            application/javascript|\
+            inode/*|\
+            application/octet-stream|\
+            application/x-setupscript)
+            return 0
+            ;;
+    esac
+    return 1
+}
+
+# Returns true if it's a video file and false otherwise.
+# @param {path} 1 The file.
+# @returns {bool} True if it's a video file and false otherwise.
+#
+is_video_file() {
+    case $(get_mime_type "$1") in
+        video/*)
+            return 0
+            ;;
+    esac
+    return 1
+}
+
+# Returns true if it's an audio file and false otherwise.
+# @param {path} 1 The file.
+# @returns {bool} True if it's an audio file and false otherwise.
+#
+is_audio_file() {
+    case $(get_mime_type "$1") in
+        video/*)
+            return 0
+            ;;
+    esac
+    return 1
+}
+
+# Returns true if it's an image file and false otherwise.
+# @param {path} 1 The file.
+# @returns {bool} True if it's an image file and false otherwise.
+#
+is_image_file() {
+    case $(get_mime_type "$1") in
+        image/*)
+            return 0
+            ;;
+    esac
+    return 1
+}
+
+# Returns true if it's a document file and false otherwise.
+# @param {path} 1 The file.
+# @returns {bool} True if it's a document file and false otherwise.
+#
+is_doc_file() {
+    case $(get_mime_type "$1") in
+        application/pdf)
+            return 0
+            ;;
+    esac
+    return 1
+}
+
+# Returns true if it's an archive file and false otherwise.
+# @param {path} 1 The file.
+# @returns {bool} True if it's an archive file and false otherwise.
+#
+is_archive_file() {
+    case $1 in
+        *.tar|*.tar.xz|\
+            *.tar.bz2|*.bz2|*.tbz2|\
+            *.tar.gz|*.tgz|\
+            *.rar|\
+            *.gz|\
+            *.zip|\
+            *.Z|\
+            *.7z|\
+            *.deb|\
+            *.tar.zst)
+            return 0
+            ;;
+        *) 
+            return 1
+            ;;
+    esac
+}
+

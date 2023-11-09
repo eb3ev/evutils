@@ -1,0 +1,137 @@
+#!/bin/sh
+#
+#= Evutils - Math Library
+#
+# Library to deal with numbers.
+
+
+
+# Returns true if it's a number and false otherwise.
+# @param {string} 1 The string to check.
+# @returns True if it's a number and false otherwise.
+#
+is_num() {
+    case $1 in
+        ''|*[!-][!0-9][!.][!0-9]*)
+            return 1
+            ;;
+    esac
+
+    return 0
+}
+
+# Returns true if it's a integer and false otherwise.
+# @param {string} 1 The string to check.
+# @returns True if it's a integer and false otherwise.
+#
+is_int() {
+    case $1 in
+        ''|*[!-][!0-9]*)
+            return 1
+            ;;
+    esac
+
+    return 0
+}
+
+# Returns true if it's a natural number and false otherwise.
+# @param {string} 1 The string to check.
+# @returns True if it's a natural number and false otherwise.
+#
+is_natural_num() {
+    case $1 in
+        ''|*[!1-9]*)
+            return 1
+            ;;
+    esac
+
+    return 0
+}
+
+# Returns true if it's a natural number and false otherwise.
+# @param {string} 1 The string to check.
+# @returns True if it's a natural number and false otherwise.
+#
+is_whole_num() {
+    case $1 in
+        ''|*[!0-9]*)
+            return 1
+            ;;
+    esac
+
+    return 0
+}
+# Returns true if it's a positive number and false otherwise.
+# @param {string} 1 The string to check.
+# @returns True if it's a positive number and false otherwise.
+#
+#
+is_positive() {
+    case $1 in
+        ''|*[!0-9][!.][!0-9]*)
+            return 1
+            ;;
+    esac
+
+    return 0
+}
+
+# Add two numbers.
+# @param {number} 1 left-hand side of addition.
+# @param {number} 2 right-hand side of addition.
+# @param {number} 3 The number of decimal points to format to. Default
+# is 0 for returning an integer.
+# @returns {number} $1 + $2
+#
+add() {
+    if ! is_num "$1" && is_num "$2" && is_whole_num "$2"; then
+        return 1
+    fi
+
+    awk "BEGIN { printf(\"%.${3:-0}f\n\"), ${1} + ${2} }"
+}
+
+# Subtract two numbers.
+# @param {number} 1 left-hand side of subtraction.
+# @param {number} 2 right-hand side of subtraction.
+# @param {number} 3 The number of decimal points to format to. Default
+# is 0 for returning an integer.
+# @returns {number} $1 - $2
+#
+sub() {
+    if ! is_num "$1" && is_num "$2" && is_whole_num "$2"; then
+        return 1
+    fi
+
+    awk "BEGIN { printf(\"%.${3:-0}f\n\"), ${1} - ${2} }"
+}
+
+# Multiplies two numbers.
+# @param {number} 1 left-hand side of multiplication.
+# @param {number} 2 right-hand side of multiplication.
+# @param {number} 3 The number of decimal points to format to. Default
+# is 0 for returning an integer.
+# @returns {number} $1 * $2
+#
+mul() {
+    if ! is_num "$1" && is_num "$2" && is_whole_num "$2"; then
+        return 1
+    fi
+
+    awk "BEGIN { printf(\"%.${3:-0}f\n\"), ${1} * ${2} }"
+}
+
+# Divides two numbers.
+# @param {number} 1 left-hand side of division.
+# @param {number} 2 right-hand side of division.
+# @param {number} 3 The number of decimal points to format to. Default
+# is 0 for returning an integer.
+# @returns {number} $1 / $2
+#
+div() {
+    if ! is_num "$1" && is_num "$2" && is_whole_num "$2"; then
+        return 1
+    fi
+
+    awk "BEGIN { printf(\"%.${3:-0}f\n\"), ${1} / ${2} }"
+}

@@ -1,0 +1,236 @@
+#!/bin/sh
+#
+#= Evutils - Evbrowser
+#
+# A wrapper for opening browsers.
+#
+#
+#== Synopsis
+#
+# evbrowser [options] URLs ...
+# evbrowser [options] -- URLs ...
+#
+#
+#== Options
+#
+# -b browser-name, --browser browser-name
+#    Override the browser set in configuration. Available values found in
+#    $EVUTILS_HOME/lib/data/browsers.
+#   
+# --browser-opts browser-options
+#    Additional browser options to add for the set browser.
+#
+# -a, --alt
+#    If there are other available installed browsers in the system that isn't
+#    already the set browser, Prompt using evmenu to select and use an alternative
+#    browser.
+#
+# --new-tab
+#    Open URL in a new tab. This is the default behaviour.
+#
+# --new-win, --new-window
+#    Open URL in a new window.
+#
+# -c, --use-clipboard
+#    Grab URLs from the clipboard to open.
+#
+# -u url, --url url
+#    The URL to open. Can use multiple times to open multiple URLs.
+# 
+# --no-fork
+#    The browser is forked by default. Pass option to disable.
+#
+# -d, --dry-run
+#    Print the computed command instead of running it.
+
+
+
+. "$EVUTILS_HOME/lib/log"
+. "$EVUTILS_HOME/lib/browser"
+. "$EVUTILS_HOME/lib/clipboard"
+. "$EVUTILS_HOME/lib/config"
+
+_browser=""
+_browser_opts=""
+_use_alt=1
+_new_tab=0
+_new_win=1
+_use_clipboard=1
+_urls=""
+_fork=0
+_dry_run=1
+
+# Update $_browser based on options and configurations.
+#
+_set_browser() {
+    if [ "$_browser" ]; then
+        return
+    fi
+
+    browserrc=$(cat "$EVBROWSERRC" 2>/dev/null)
+    if is_available_browser "$browserrc"; then
+        _browser=$browserrc
+    elif is_available_browser "$EVUTILS_BROWSER"; then
+        _browser=$EVUTILS_BROWSER
+    else
+        fallback_browser=$(get_available_browsers | head -n 1)
+        if [ "$fallback_browser" ]; then
+            _browser=$fallback_browser
+        else
+            log_error "No available browsers. Exiting..."
+            exit 1
+        fi
+    fi
+
+    if [ "$_use_alt" -eq 0 ]; then
+        if [ "$(get_alt_browsers)" ]; then
+            alt_browser=$(get_alt_browsers | evmenu --prompt "Use")
+            if [ "$alt_browser" ]; then
+                _browser=$alt_browser
+            else
+                exit
+            fi
+        else
+            log_status "No alternative browser to use. Using the default (${_browser})..."
+        fi
+    fi
+}
+
+# Update $_urls with values inside clipboard if set.
+#
+_update_urls() {
+    if [ "$_use_clipboard" -eq 0 ]; then
+        clipboard=$(get_clipboard)
+
+        IFS=$CHAR_NL
+        for url in $clipboard; do
+            unset IFS
+            if is_url "$url"; then
+                _urls="${_urls} '${url}'"
+            else
+                log_warning "Invalid URL ${url}. Ignoring..."
+            fi
+        done
+
+        if ! [ "$_urls" ]; then
+            log_error "No valid URL in clipboard. Exiting..."
+            exit 1
+        fi
+    fi
+}
+
+# Get the browser argument query for the URLs.
+# @returns {string} Browser URL query arguments.
+#
+_get_url_queries() {
+    query_arg=$(get_browser_new_tab_opt "$_browser")
+
+    if [ "$_new_win" -eq 0 ]; then
+        query_arg=$(get_browser_new_win_opt "$_browser")
+    fi
+
+    queries=""
+
+    for url in $_urls; do
+        queries="${queries} ${query_arg} ${url}"
+    done
+
+    echo "$queries"
+}
+
+# Run the browser command.
+#
+_run() {
+    browser_cmd=$(get_browser_cmd "$_browser")
+    queries=$(_get_url_queries) 
+    if [ "$_dry_run" -eq 0 ]; then
+        if [ "$_fork" -eq 0 ]; then
+            eval echo "${browser_cmd} ${_browser_opts} ${queries} &"
+        else
+            eval echo "${browser_cmd} ${_browser_opts} ${queries}"
+        fi
+    else
+        if [ "$_fork" -eq 0 ]; then
+            eval "${browser_cmd} ${_browser_opts} ${queries} &"
+        else
+            eval "${browser_cmd} ${_browser_opts} ${queries}"
+        fi
+    fi
+}
+
+main() {
+    while [ "$1" ]; do
+        case $1 in
+            -b|--browser)
+                if is_available_browser "$2"; then
+                    _browser=$2
+                else
+                    log_warning "Invalid browser ${2}"
+                fi
+                shift
+                ;;
+            --browser-opts)
+                _browser=$2
+                shift
+                ;;
+            -a|--alt)
+                _use_alt=0
+                ;;
+            --new-tab)
+                _new_tab=0
+                ;;
+            --new-win|--new-window)
+                _new_win=0
+                ;;
+            -c|--use-clipboard)
+                _use_clipboard=0
+                ;;
+            -u|--url)
+                if is_url "$2"; then
+                    _urls="${_urls} '$2'"
+                else
+                    log_warning "Invalid URL ${1}. Ignoring..."
+                fi
+                shift
+                ;;
+            --no-fork)
+                _fork=1
+                ;;
+            -d|--dry-run)
+                _dry_run=0
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -?*)
+                log_warning "Unknown option ${1}. Ignoring..."
+                ;;
+            *)
+                if is_url "$1"; then
+                    _urls="${_urls} '$1'"
+                else
+                    log_warning "Invalid URL ${1}. Ignoring..."
+                fi
+                ;;
+        esac
+
+        shift
+    done
+
+    while [ "$1" ]; do
+        if is_url "$1"; then
+            _urls="${_urls} '$1'"
+        else
+            log_warning "Invalid URL $1. Ignoring..."
+        fi
+        shift
+    done
+
+    _set_browser
+    _update_urls
+    _run
+}
+
+main "$@"
+

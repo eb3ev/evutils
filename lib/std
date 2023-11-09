@@ -1,0 +1,15 @@
+#!/bin/sh
+#
+#= Evutils - Standard Library
+#
+# Standard library for evutils.
+
+
+
+# Special Characters
+# Newline.
+CHAR_NL="
+"
+# Tab.
+CHAR_TAB="	"
+

@@ -1,0 +1,53 @@
+#
+#= Screen Layout Presets
+#
+# Screen layout presets file. Blank lines and lines starting with # are ignored.
+#
+# To add a preset, add a line in the format below with values separated with ' , '.
+# <Host Name> , <Preset Name> , <Screen Layout Setter Options>
+#
+# <Screen Layout Setter Options> format:
+# <Option Settings For Primary Screen>:<Option Settings For Additional Screens>...
+# The first screen set will always be set as the primary screen.
+#
+# <Option Settings For Primary Screen> format:
+# <Screen Name>;<Screen Resolution>;<Screen Rotation>
+#
+# <Option Settings For Additional Screens> format:
+# <Screen Name>;<Screen Resolution>;<Screen Rotation>;<Screen Position>
+#
+# <Screen Resolution> has to be a resolution supported by the screen.
+#
+# Available <Screen Rotation> options:
+# -  Normal
+# -  Left
+# -  Right
+# -  Inverted
+# 
+# <Screen Position> format:
+# <Position@Screen>
+# 'Position' is the position of the screen setting relative to 'Screen'.
+# 'Screen' has to be a screen that is set before setting a relative position.
+# Available 'Position' Options:
+# -  Same
+# -  Left
+# -  Right
+# -  Above
+# -  Below
+#
+#
+#== Notes
+#
+# -  Connected screens that are not set will be turned off.
+#
+# -  Presets will only show on the device with the set host name.
+#
+# -  Presets that have a certain number of screens option settings set will only
+#    show when the connected screen count matches it.
+
+
+
+Host Name 1 , My Preset Name 1 , Monitor1;1920x1080;Normal
+
+Host Name 2 , My Preset Name 2 , Monitor1;1920x1080;Normal:Monitor2;1920x1080;Right;Right@Monitor1
+

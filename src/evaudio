@@ -1,0 +1,118 @@
+#!/bin/sh
+#
+#= Evutils - Evaudio
+#
+# Audio output setter.
+#
+#
+#== Synopsis
+#
+# evaudio [options] --sink sink-id
+# evaudio [options] sink-id
+# evaudio [options] -- sink-id
+#
+#
+#== Options
+#
+# -s sink-id, --sink sink-id
+#    The sink ID to set as the default audio output to use. If unset, select from
+#    a list of available sinks.
+
+
+
+. "$EVUTILS_HOME/lib/log"
+. "$EVUTILS_HOME/lib/audio"
+. "$EVUTILS_HOME/lib/list"
+. "$EVUTILS_HOME/lib/encode"
+
+_sinks=""
+_sink=""
+
+# Set the sink to use.
+_set_sink() {
+    if [ "$_sink" ]; then
+        _sinks=$(get_sinks)
+        return
+    fi
+    _sinks=$(get_alt_sinks)
+    if ! [ "$_sinks" ]; then
+        log_status "No alternate sinks available. Exiting..."
+        exit
+    fi
+
+    if ! { [ -t 0 ] || [ -p /dev/stdin ]; }; then
+        evmenu_opts="${evmenu_opts} --gui"
+    else
+        evmenu_opts="${evmenu_opts} --term"
+    fi
+
+    sink_description=$(get_col --idx 2 --delim "," --list "$_sinks" | eval evmenu "$evmenu_opts" --prompt "'Set Audio Output'")
+    if ! [ "$sink_description" ]; then
+        exit
+    fi
+    _sink=$(echo "$_sinks" | awk -F "," "/,$(encode --enc AWK_REGEX -- "$sink_description")/ {print \$1}")
+}
+
+# Set default sink.
+_run() {
+    sink_description=$(get_val --key "$_sink" --idx 2 --delim "," --list "$_sinks")
+    { set_def_sink "$_sink" && log_status "Default sink set to ${sink_description}"; } \
+        || log_error "Setting default sink to ${sink_description} failed."
+}
+
+main() {
+    while [ "$1" ]; do
+        case $1 in
+            -s|--sink)
+                if get_sinks | grep -Fq -e "${2},"; then
+                    if get_alt_sinks | grep -Fq -e "${2},"; then
+                        _sink=$2
+                    else
+                        log_warning "${2} already the default sink. Ignoring..."
+                    fi
+                else
+                    log_warning "Invalid sink ID ${2}. Ignoring..."
+                fi
+                shift
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -?*)
+                log_warning "Unknown option ${1}. Ignoring..."
+                ;;
+            *)
+                if get_sinks | grep -Fq -e "${1},"; then
+                    if get_alt_sinks | grep -Fq -e "${1},"; then
+                        _sink=$1
+                    else
+                        log_warning "${1} already the default sink. Ignoring..."
+                    fi
+                else
+                    log_warning "Invalid sink ID ${1}. Ignoring..."
+                fi
+                ;;
+        esac
+        shift
+    done
+
+    while [ "$1" ]; do
+        if get_sinks | grep -Fq -e "${1},"; then
+            if get_alt_sinks | grep -Fq -e "${1},"; then
+                _sink=$1
+            else
+                log_warning "${1} already the default sink. Ignoring..."
+            fi
+        else
+            log_warning "Invalid sink ID ${1}. Ignoring..."
+        fi
+        shift
+    done
+
+    _set_sink
+    _run
+}
+
+main "$@"
+

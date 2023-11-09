@@ -1,0 +1,209 @@
+#!/bin/sh
+#
+#= Evutils - Evremame
+#
+# Rename files / directories using a terminal editor.
+#
+#
+#== Synopsis
+#
+# evrename [options] --file file ...
+# evrename [options] file ...
+# evrename [options] -- file ...
+#
+#
+#== Options
+#
+# -f file, --file file
+#    The file to rename in current working directory. Pass multiple files to bulk
+#    rename. If unset, all files in current working directory is used.
+#
+# -r, --root
+#    Pass if root access is need to rename files.
+#
+# -e editor, --editor editor
+#    The terminal editor to use. If unset, the term_editor set in configuration file is used.
+#
+
+
+. "$EVUTILS_HOME/lib/log"
+. "$EVUTILS_HOME/lib/std"
+. "$EVUTILS_HOME/lib/program"
+. "$EVUTILS_HOME/lib/list"
+. "$EVUTILS_HOME/lib/file"
+. "$EVUTILS_HOME/lib/config"
+
+_require_root=1
+_files=""
+_editor=""
+
+_working_dir_files=""
+_old_files=""
+_new_files=""
+
+# Update the file list to using working directory if no files are set.
+#
+_update_files() {
+    working_dir_files=$(ls -A1 2>/dev/null)
+
+    if ! [ "$_files" ]; then
+        _files=$working_dir_files
+    fi
+
+    if ! [ "$_files" ]; then
+        log_error "No files or directories to rename"
+        exit 1
+    fi
+
+    _old_files=$(mktemp)
+    _new_files=$(mktemp)
+    IFS=$CHAR_NL
+    for file in $_files; do
+        unset IFS
+        if echo "$working_dir_files" | grep -Fqx -- "$file"; then
+            echo "${file##*/}" >> "$_old_files"
+            echo "${file##*/}" >> "$_new_files"
+            _working_dir_files=$(list_rm --list "$_working_dir_files" -- "$file")
+        else
+            log_warning "${file} not found in current working directory. Ignoring..."
+        fi
+    done
+}
+
+# Run the editor to rename files.
+#
+_run_editor() {
+    if [ "$(list_len --file "$_old_files")" -eq 0 ]; then
+        log_error "No files to rename. Exiting..."
+        exit 1
+    fi
+    if [ "$_editor" ]; then
+        evedit --no-cache --editor "$_editor" -- "$_new_files"
+    else
+        evedit --no-cache -- "$_new_files"
+    fi
+}
+
+# Rename the files if there were any changes.
+#
+_rename() {
+    if [ "$(list_len --file "$_old_files")" -gt "$(list_len --file "$_new_files")" ]; then
+        log_error "Files have been removed. Exiting..."
+        exit 1
+    elif [ "$(list_len --file "$_old_files")" -lt "$(list_len --file "$_new_files")" ]; then
+        log_error "Files have been added. Exiting..."
+        exit 1
+    fi
+
+    if cmp --silent "$_old_files" "$_new_files"; then
+        log_status "No files were renamed. Exiting..."
+        exit
+    fi
+
+    _renamed_files=""
+
+    i=1
+    while read -r old_name; do
+        new_name=$(get_row --idx "$i" --file "$_new_files")
+
+        if ! [ "$new_name" ]; then
+            log_warning "Cannot rename ${old_name} to an empty line. Ignoring..."
+            continue
+        fi
+
+        if echo "$working_dir_files" | grep -Fqx -- "$new_name"; then
+            log_warning "Cannot rename ${old_name} to ${new_name} -- ${new_name} already exists. Ignoring..."
+            continue
+        fi
+
+        if echo "$_renamed_files" | grep -Fqx -- "$new_name"; then
+            log_warning "Cannot rename ${old_name} to ${new_name} -- ${new_name} already exists. Ignoring..."
+            continue
+        fi
+
+        if ! is_valid_filename "$new_name"; then
+            log_warning "Cannot rename ${old_name} to ${new_name} -- illegal filename characters. Ignoring..."
+            continue
+        fi
+
+        case $new_name in
+            "$old_name")
+                ;;
+            *)
+                if [ "$_require_root" -eq 0 ]; then
+                    sudo mv -n -- "$old_name" "$new_name" || { log_error "Renaming ${old_name} to ${new_name} failed. Exiting..." && exit 1; }
+                else
+                    mv -n -- "$old_name" "$new_name" || { log_error "Renaming ${old_name} to ${new_name} failed. Exiting..." && exit 1; }
+                fi
+                _renamed_files=$(list_cat "$_renamed_files" "$new_name")
+                ;;
+        esac
+
+        i=$((i + 1))
+    done < "$_old_files"
+
+    rm -f -- "$_old_files" "$_new_files"
+}
+
+# Run.
+#
+_run() {
+    _update_files
+    _run_editor
+    _rename
+}
+
+main() {
+    while [ "$1" ]; do
+        case $1 in
+            -f|--file)
+                if [ -e "$2" ]; then
+                    _files=$(list_cat "$_files" "$2")
+                else
+                    log_warning "Invalid file/directory ${2}. Ignoring..."
+                fi
+                shift
+                ;;
+            -r|--root)
+                _require_root=0
+                ;;
+            -e|--editor)
+                if is_installed "$2"; then
+                    _editor=$2
+                else
+                    log_warning "${2} not installed. Ignoring..."
+                fi
+                shift
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -?*)
+                log_warning "Unknown option ${1}. Ignoring..."
+                ;;
+            *)
+                if [ -e "$1" ]; then
+                    _files=$(list_cat "$_files" "$1")
+                else
+                    log_warning "Invalid file/directory ${1}. Ignoring..."
+                fi
+                ;;
+        esac
+        shift
+    done
+
+    while [ "$1" ]; do
+        if [ -e "$1" ]; then
+            _files=$(list_cat "$_files" "$1")
+        else
+            log_warning "Invalid file/directory ${1}. Ignoring..."
+        fi
+        shift
+    done
+
+    _run
+}
+
+main "$@"
+

@@ -1,0 +1,88 @@
+#!/bin/sh
+#
+#= Evutils - Evwrite
+#
+# Use evterm to open a terminal editor to write text and copy to clipboard.
+#
+#
+#== Synopsis
+#
+# evwrite [options]
+#
+#
+#== Options
+#
+# -o terminal-options, --term-opts terminal-options
+#    Additional options to pass to the terminal used in evterm.
+#
+# -e terminal-editor, --editor terminal-editor
+#    Override the terminal editor set in configuration file.
+
+
+
+. "$EVUTILS_HOME/lib/log"
+. "$EVUTILS_HOME/lib/program"
+. "$EVUTILS_HOME/lib/clipboard"
+. "$EVUTILS_HOME/lib/config"
+
+_term_opts=""
+_editor=""
+
+_evedit_cmd="evedit --no-cache --no-fork"
+
+# Set evedit command.
+#
+_set_evedit_cmd() {
+    if [ "$_editor" ]; then
+        _evedit_cmd="${_evedit_cmd} --editor '${_editor}'"
+    fi
+    if [ "$_term_opts" ]; then
+        _evedit_cmd="${_evedit_cmd} --term-opts '${_term_opts}'"
+    fi
+}
+
+# Run.
+#
+_run() {
+    tmp=$(mktemp)
+    eval "${_evedit_cmd}" -- "$tmp"
+    if ! [ "$(wc -w 2>/dev/null < "$tmp")" -gt 0 ]; then
+        log_status "No text written. Exiting..."
+        rm -f -- "$tmp"
+        exit
+    fi
+    set_clipboard -- "$(cat "$tmp")"
+    rm -f -- "$tmp"
+}
+
+main() {
+    while [ "$1" ]; do
+        case $1 in
+            -o|--term-opts)
+                _term_opts=$2
+                shift
+                ;;
+            -e|--editor)
+                if is_installed "$2"; then
+                    _editor=$2
+                else
+                    log_warning "${1} not installed. Ignoring..."
+                fi
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -?*)
+                log_warning "Unknown option ${1}. Ignoring..."
+                ;;
+        esac
+        shift
+    done
+
+    _set_evedit_cmd
+    _run
+}
+
+main "$@"
+

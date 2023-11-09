@@ -1,0 +1,833 @@
+#!/bin/sh
+#
+#= Evutils - List Library
+#
+# Library to deal with lists.
+#
+# Lists are a list of strings separated by new lines by default to act as rows.
+# A 2D list is introduced by using a delimiter within a string to introduce
+# columns. Lists can be stored as a string or in a file.
+
+
+
+. "$EVUTILS_HOME/lib/std"
+. "$EVUTILS_HOME/lib/math"
+. "$EVUTILS_HOME/lib/encode"
+
+# Default row separator.
+ROW_DELIM=$CHAR_NL
+# Default column separator.
+COL_DELIM=" , "
+
+# Concatenate 2 lists.
+# @param {list} 1 List 1.
+# @param {list} 2 List 2.
+# @param {string} 3 The lists row delimiter. Default is $ROW_DELIM.
+# @returns {list} List with the added item.
+#
+list_cat() {
+    echo "${1:+${1}${3:-${ROW_DELIM}}}$2"
+}
+
+# Remove row items from a list.
+# @param {path} -f|--file The file list. If --file and --list is unset, stdin is used.
+# @param {list} -l|--list The list. If --file and --list is unset, stdin is used.
+# @param {string} -k|--key The items that match this will be removed.
+# @param {string} -d|--delim Override default column delimiter to use when --key
+# is set.
+# @param {string} --item|* The items that match this will be removed. --key is
+# overrided if set.
+# @returns {list} New list with removed items.
+#
+list_rm() {
+    stdin=0
+    file=""
+    list=""
+    item=""
+    key=""
+    delim=$COL_DELIM
+
+    while [ "$1" ]; do
+        case $1 in
+            -f|--file)
+                if [ -w "$2" ]; then
+                    file=$2
+                else
+                    return 1
+                fi
+                stdin=1
+                shift
+                ;;
+            -l|--list)
+                list=$2
+                stdin=1
+                shift
+                ;;
+            -k|--key)
+                key=$2
+                shift
+                ;;
+            -d|--delim)
+                delim=$2
+                shift
+                ;;
+            --item)
+                item=$2
+                shift
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -?*)
+                ;;
+            *)
+                item=$1
+                ;;
+        esac
+
+        shift
+    done
+
+    while [ "$1" ]; do
+        item=$1
+        shift
+    done
+
+    if [ "$stdin" -eq 0 ]; then
+        if [ "$item" ]; then
+            sed "/^$(encode --enc SED_REGEX -- "$item")$/d"
+        elif [ "$key" ]; then
+            sed "/^$(encode --enc SED_REGEX -- "$key")$(encode --enc SED_REGEX -- "$delim")/d"
+        else
+            cat
+        fi
+    elif [ "$file" ]; then
+        if [ "$item" ]; then
+            sed -i "/^$(encode --enc SED_REGEX -- "$item")\$/d" "$file"
+        elif [ "$key" ]; then
+            sed -i "/^$(encode --enc SED_REGEX -- "$key")$(encode --enc SED_REGEX -- "$delim")/d" "$file"
+        else
+            cat "$file"
+        fi
+    elif [ "$list" ]; then
+        if [ "$item" ]; then
+            echo "$list" | sed "/^$(encode --enc SED_REGEX -- "$item")$/d"
+        elif [ "$key" ]; then
+            echo "$list" | sed "/^$(encode --enc SED_REGEX -- "$key")$(encode --enc SED_REGEX -- "$delim")/d"
+        else
+            echo "$list"
+        fi
+    fi
+}
+
+# Returns the column length of a list.
+# @param {path} -f|--file The file list. If --file and --list is unset, stdin is used.
+# @param {list} -l|--list The list. If --file and --list is unset, stdin is used.
+# @returns {u_int} Column length.
+#
+list_len() {
+    stdin=0
+    file=""
+    list=""
+
+    while [ "$1" ]; do
+        case $1 in
+            -f|--file)
+                if [ -r "$2" ]; then
+                    file=$2
+                else
+                    return 1
+                fi
+                stdin=1
+                shift
+                ;;
+            -l|--list)
+                list=$2
+                stdin=1
+                shift
+                ;;
+        esac
+
+        shift
+    done
+
+    if [ "$stdin" -eq 0 ]; then
+        wc -l 2>/dev/null || echo 0
+    elif [ "$file" ]; then
+        wc -l 2>/dev/null < "$file" || echo 0
+    elif [ "$list" ]; then
+        echo "$list" | wc -l 2>/dev/null || echo 0
+    fi
+}
+
+# Prepend item to list.
+# @param {path} -f|--file The file list. If --file and --list is unset, stdin is used.
+# @param {list} -l|--list The list. If --file and --list is unset, stdin is used.
+# @param {string} --item|* The items to prepend.
+# @returns {list} New list with prepended items.
+#
+list_prepend() {
+    stdin=0
+    file=""
+    list=""
+    item=""
+
+    while [ "$1" ]; do
+        case $1 in
+            -f|--file)
+                if [ -w "$2" ]; then
+                    file=$2
+                else
+                    return 1
+                fi
+                stdin=1
+                shift
+                ;;
+            -l|--list)
+                list=$2
+                stdin=1
+                shift
+                ;;
+            --item)
+                item=$2
+                shift
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -?*)
+                ;;
+            *)
+                item=$1
+                ;;
+        esac
+
+        shift
+    done
+
+    while [ "$1" ]; do
+        item=$1
+        shift
+    done
+
+    if [ "$stdin" -eq 0 ]; then
+        sed -i "1i\\${item}"
+    elif [ "$file" ]; then
+        if [ -s "$file" ]; then
+            sed -i "1i\\${item}" "$file"
+        else
+            echo "$item" >> "$file"
+        fi
+    elif [ "$list" ]; then
+        echo "$list" | sed -i "1i\\${item}"
+    fi
+}
+
+# Append item to list.
+# @param {path} -f|--file The file list. If --file and --list is unset, stdin is used.
+# @param {list} -l|--list The list. If --file and --list is unset, stdin is used.
+# @param {string} --item|* The items to append.
+# @returns {list} New list with appended items.
+#
+list_append() {
+    stdin=0
+    file=""
+    list=""
+    item=""
+
+    while [ "$1" ]; do
+        case $1 in
+            -f|--file)
+                if [ -w "$2" ]; then
+                    file=$2
+                else
+                    return 1
+                fi
+                stdin=1
+                shift
+                ;;
+            -l|--list)
+                list=$2
+                stdin=1
+                shift
+                ;;
+            --item)
+                item=$2
+                shift
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -?*)
+                ;;
+            *)
+                item=$1
+                ;;
+        esac
+
+        shift
+    done
+
+    while [ "$1" ]; do
+        item=$1
+        shift
+    done
+
+    if [ "$stdin" -eq 0 ]; then
+        sed "\$a\\${item}"
+    elif [ "$file" ]; then
+        echo "$item" >> "$file"
+    elif [ "$list" ]; then
+        echo "$list" | sed "\$a\\${item}"
+    fi
+}
+
+# Move item to the top of the list.
+# @param {path} -f|--file The file list. If --file and --list is unset, stdin is used.
+# @param {list} -l|--list The list. If --file and --list is unset, stdin is used.
+# @param {string} --item|* The items to move.
+# @returns {list} New list with moved items.
+#
+move_to_top() {
+    stdin=0
+    file=""
+    list=""
+    item=""
+
+    while [ "$1" ]; do
+        case $1 in
+            -f|--file)
+                if [ -w "$2" ]; then
+                    file=$2
+                else
+                    return 1
+                fi
+                stdin=1
+                shift
+                ;;
+            -l|--list)
+                list=$2
+                stdin=1
+                shift
+                ;;
+            --item)
+                item=$2
+                shift
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -?*)
+                ;;
+            *)
+                item=$1
+                ;;
+        esac
+
+        shift
+    done
+
+    while [ "$1" ]; do
+        item=$1
+        shift
+    done
+
+    if [ "$stdin" -eq 0 ]; then
+        list_rm --item "$item" | list_prepend --item "$item"
+    elif [ "$file" ]; then
+        list_rm --file "$file" --item "$item" && list_prepend --file "$file" --item "$item"
+    elif [ "$list" ]; then
+        echo "$list" | list_rm --item "$item" | list_prepend --item "$item"
+    fi
+}
+
+# Move item to the bottom of the list.
+# @param {path} -f|--file The file list. If --file and --list is unset, stdin is used.
+# @param {list} -l|--list The list. If --file and --list is unset, stdin is used.
+# @param {string} --item|* The items to move.
+# @returns {list} New list with moved items.
+#
+move_to_bottom() {
+    stdin=0
+    file=""
+    list=""
+    item=""
+
+    while [ "$1" ]; do
+        case $1 in
+            -f|--file)
+                if [ -w "$2" ]; then
+                    file=$2
+                else
+                    return 1
+                fi
+                stdin=1
+                shift
+                ;;
+            -l|--list)
+                list=$2
+                stdin=1
+                shift
+                ;;
+            --item)
+                item=$2
+                shift
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -?*)
+                ;;
+            *)
+                item=$1
+                ;;
+        esac
+
+        shift
+    done
+
+    while [ "$1" ]; do
+        item=$1
+        shift
+    done
+
+    if [ "$stdin" -eq 0 ]; then
+        list_rm --item "$item" | list_append --item "$item"
+    elif [ "$file" ]; then
+        list_rm --file "$file" --item "$item" && list_append --file "$file" --item "$item"
+    elif [ "$list" ]; then
+        echo "$list" | list_rm --item "$item" | list_append --item "$item"
+    fi
+}
+
+# Remove duplicate items in a list.
+# @param {path} -f|--file The file list. If --file and --list is unset, stdin is used.
+# @param {list} -l|--list The list. If --file and --list is unset, stdin is used.
+# @returns {list} New list with duplicate items removed.
+#
+list_rm_dups() {
+    stdin=0
+    file=""
+    list=""
+
+    while [ "$1" ]; do
+        case $1 in
+            -f|--file)
+                if [ -w "$2" ]; then
+                    file=$2
+                else
+                    return 1
+                fi
+                stdin=1
+                shift
+                ;;
+            -l|--list)
+                list=$2
+                stdin=1
+                shift
+                ;;
+        esac
+
+        shift
+    done
+
+    if [ "$stdin" -eq 0 ]; then
+        awk '!x[$0]++'
+    elif [ "$file" ]; then
+        new_list=$(awk '!x[$0]++' "$file")
+        echo "$new_list" > "$file"
+    elif [ "$list" ]; then
+        echo "$list" | awk '!x[$0]++'
+    fi
+}
+
+# Sync a list with another list. Items not in second list and in the first list
+# will be removed. Items in the second list but not in the first will be added.
+# @param {path|list} 1 The file list or list to be modified.
+# @param {path|list} 2 The file list or list to sync to.
+# @returns {list} New synced list.
+#
+sync_list_with_list() {
+    if [ -f "$1" ]; then
+        list_rm_dups --file "$1"
+
+        if [ -f "$2" ]; then
+            # Sync file list to file list.
+            new_items=$(grep -vFx -e "$new_list" -- "$2")
+            new_list=$(grep -Fx -f "$2" -- "$1")
+            new_list=$(list_cat "$new_items" "$new_list")
+        else
+            # Sync file list to list.
+            new_items=$(echo "$2" | grep -vFx -e "$new_list")
+            new_list=$(grep -Fx -e "$2" -- "$1")
+            new_list=$(list_cat "$new_items" "$new_list")
+        fi
+
+        echo "$new_list" > "$1"
+    else
+        new_list=$(list_rm_dups --list "$1")
+
+        if [ -f "$2" ]; then
+            # Sync list to file list.
+            new_items=$(grep -vFx -e "$new_list" -- "$2")
+            new_list=$(echo "$new_list" | grep -Fx -f "$2")
+            new_list=$(list_cat "$new_items" "$new_list")
+        else
+            # Sync list to list.
+            new_items=$(echo "$2" | grep -vFx -e "$new_list")
+            new_list=$(echo "$new_list" | grep -Fx -e "$2")
+            new_list=$(list_cat "$new_items" "$new_list")
+        fi
+
+        echo "$new_list"
+    fi
+}
+
+# Returns a column of the list.
+# @param {path} -f|--file The file list. If --file and --list is unset, stdin is used.
+# @param {list} -l|--list The list. If --file and --list is unset, stdin is used.
+# @param {int} -i|--idx Column index. Must be a natural number. 1 is the default.
+# @param {string} -d|--delim Column delimiter. $COL_DELIM is used as the default.
+# @param {awk_regex_pattern} -e|--regex The awk regex pattern to use. Default
+# is '!/^ *#/ && NF' which doesn't include lines that start with # and empty lines.
+# @returns {list} The column.
+#
+get_col() {
+    stdin=0
+    file=""
+    list=""
+    idx=1
+    delim=$COL_DELIM
+    regex="!/^ *#/ && NF"
+
+    while [ "$1" ]; do
+        case $1 in
+            -f|--file)
+                if [ -r "$2" ]; then
+                    file=$2
+                else
+                    return 1
+                fi
+                stdin=1
+                shift
+                ;;
+            -l|--list)
+                list=$2
+                stdin=1
+                shift
+                ;;
+            -i|--idx)
+                if is_natural_num "$2"; then
+                    if [ "$2" -le 0 ]; then
+                        return 1
+                    fi
+                    idx=$2
+                else
+                    return 1
+                fi
+                shift
+                ;;
+            -d|--delim)
+                delim=$2
+                shift
+                ;;
+            -e|--regex)
+                if [ "$2" ]; then
+                    regex=$2
+                fi
+                shift
+                ;;
+        esac
+
+        shift
+    done
+
+    if [ "$stdin" -eq 0 ]; then
+        awk -F "$delim" "${regex} {print \$${idx}}"
+    elif [ "$file" ]; then
+        awk -F "$delim" "${regex} {print \$${idx}}" "$file"
+    elif [ "$list" ]; then
+        echo "$list" | awk -F "$delim" "${regex} {print \$${idx}}"
+    fi
+}
+
+# Returns a row of the list.
+# @param {path} -f|--file The file list. If --file and --list is unset, stdin is used.
+# @param {list} -l|--list The list. If --file and --list is unset, stdin is used.
+# @param {int} -i|--idx Row index. Must be a natural number. 1 is the default.
+# @returns {list} The row.
+#
+get_row() {
+    stdin=0
+    file=""
+    list=""
+    idx=1
+
+    while [ "$1" ]; do
+        case $1 in
+            -f|--file)
+                if [ -r "$2" ]; then
+                    file=$2
+                else
+                    return 1
+                fi
+                stdin=1
+                shift
+                ;;
+            -l|--list)
+                list=$2
+                stdin=1
+                shift
+                ;;
+            -i|--idx)
+                if is_natural_num "$2"; then
+                    if [ "$2" -le 0 ]; then
+                        return 1
+                    fi
+                    idx=$2
+                else
+                    return 1
+                fi
+                shift
+                ;;
+        esac
+
+        shift
+    done
+
+    if [ "$stdin" -eq 0 ]; then
+        sed -n "${idx} p"
+    elif [ "$file" ]; then
+        sed -n "${idx} p" "$file"
+    elif [ "$list" ]; then
+        echo "$list" | sed -n "${idx} p"
+    fi
+}
+
+# Returns the keys of a list (Values of column index 1).
+# @param {path} -f|--file The file list. If --file and --list is unset, stdin is used.
+# @param {list} -l|--list The list. If --file and --list is unset, stdin is used.
+# @param {string} -d|--delim Column delimiter. $COL_DELIM is used as the default.
+# @param {awk_regex_pattern} -e|--regex The awk regex pattern to use. Default
+# is '!/^ *#/ && NF' which doesn't include lines that start with # and empty lines.
+# @returns {list} The key column.
+#
+get_keys() {
+    get_col "$@" --idx 1
+}
+
+# Return the a column value of the given key. 
+# @param {path} -f|--file The file list. If --file and --list is unset, stdin is used.
+# @param {list} -l|--list The list. If --file and --list is unset, stdin is used.
+# @param {string} -k|--key|* The key.
+# @param {int} -i|--idx Column index. Must be a natural number and greater than 1.
+# 2 is the default.
+# @param {string} -d|--delim Column delimiter. $COL_DELIM is used as the default.
+# @returns {string} Column value of the key.
+#
+get_val() {
+    stdin=0
+    file=""
+    list=""
+    key=""
+    idx=2
+    delim=$COL_DELIM
+
+    while [ "$1" ]; do
+        case $1 in
+            -f|--file)
+                if [ -r "$2" ]; then
+                    file=$2
+                else
+                    return 1
+                fi
+                stdin=1
+                shift
+                ;;
+            -l|--list)
+                list=$2
+                stdin=1
+                shift
+                ;;
+            -k|--key)
+                key=$2
+                shift
+                ;;
+            -i|--idx)
+                if is_natural_num "$2"; then
+                    if [ "$2" -le 1 ]; then
+                        return 1
+                    fi
+                    idx=$2
+                else
+                    return 1
+                fi
+                shift
+                ;;
+            -d|--delim)
+                delim=$2
+                shift
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -?*)
+                ;;
+            *)
+                key=$2
+                shift
+                ;;
+        esac
+
+        shift
+    done
+
+    while [ "$1" ]; do
+        key=$2
+        shift
+    done
+
+    key=$(encode --enc AWK_REGEX -- "$key")
+
+    if [ "$stdin" -eq 0 ]; then
+        awk -F "$delim" "/^${key}${delim}/ {print \$${idx}}"
+    elif [ "$file" ]; then
+        awk -F "$delim" "/^${key}${delim}/ {print \$${idx}}" "$file"
+    elif [ "$list" ]; then
+        echo "$list" | awk -F "$delim" "/^${key}${delim}/ {print \$${idx}}"
+    fi
+}
+
+# Appy the filter to list from stdin.
+# @param {filter} 1 The filter to use.
+# Filters:
+# TXT = Whitelists plain-text files
+# DOC = Whitelists document files
+# IMG = Whitelists image files
+# VID = Whitelists video files
+# ZIP = Whitelists archive files
+# URL = Whitelists URL strings.
+# @returns {list} Filtered list.
+#
+apply_filter() {
+    # Filters.
+    FILTERS_PREFIX="$EVUTILS_HOME/lib/filter/list"
+    # Whitelists plain-text files.
+    FILTER_TXT="$FILTERS_PREFIX/plaintext.awk"
+    # Whitelists document files.
+    FILTER_DOC="$FILTERS_PREFIX/documents.awk"
+    # Whitelists image files.
+    FILTER_IMG="$FILTERS_PREFIX/images.awk"
+    # Whitelists video files.
+    FILTER_VID="$FILTERS_PREFIX/videos.awk"
+    # Whitelists archive files.
+    FILTER_ARCHIVE="$FILTERS_PREFIX/archives.awk"
+    # Whitelists URL strings.
+    FILTER_URL="$FILTERS_PREFIX/urls.awk"
+
+    case $1 in
+        TXT)
+            "$FILTER_TXT"
+            ;;
+        DOC)
+            "$FILTER_DOC"
+            ;;
+        IMG)
+            "$FILTER_IMG"
+            ;;
+        VID)
+            "$FILTER_VID"
+            ;;
+        ZIP)
+            "$FILTER_ARCHIVE"
+            ;;
+        URL)
+            "$FILTER_URL"
+            ;;
+        *)
+            cat
+            ;;
+    esac
+}
+
+# Filter a list using set filters.
+# @param {path} -f|--file The file list. If --file and --list is unset, stdin is used.
+# @param {list} -l|--list The list. If --file and --list is unset, stdin is used.
+# @param {filter} -t|--filter The filter to use. To use multiple filters, separate
+# filters using :, e.g. --filter TXT:DOC.
+# Filters:
+# TXT = Whitelists plain-text files
+# DOC = Whitelists document files
+# IMG = Whitelists image files
+# VID = Whitelists video files
+# ZIP = Whitelists archive files
+# URL = Whitelists URL strings.
+# @returns {list} Filtered list.
+#
+filter() {
+    stdin=0
+    file=""
+    list=""
+    filters=""
+    new_list=""
+
+    while [ "$1" ]; do
+        case $1 in
+            -f|--file)
+                if [ -r "$2" ]; then
+                    file=$2
+                else
+                    return 1
+                fi
+                stdin=1
+                shift
+                ;;
+            -l|--list)
+                list=$2
+                stdin=1
+                shift
+                ;;
+            -t|--filter)
+                filters=$2
+                shift
+                ;;
+        esac
+
+        shift
+    done
+
+    if ! [ "$filters" ]; then
+        if [ "$stdin" -eq 0 ]; then
+            cat
+        elif [ "$file" ]; then
+            cat "$file"
+        else
+            echo "$list"
+        fi
+        return
+    fi
+
+    if [ "$stdin" -eq 0 ]; then
+        tmp=$(mktemp)
+        cat > "$tmp"
+        list=$(cat "$tmp")
+        rm -f "$tmp"
+    elif [ "$file" ]; then
+        list=$(cat "$file")
+    fi
+
+    IFS=:
+    for filter in $filters; do
+        unset IFS
+        new_list=$(list_cat "$new_list" "$(echo "${new_list:-$list}" | apply_filter "$filter")")
+    done
+
+    echo "$new_list"
+}
+

@@ -1,0 +1,194 @@
+#!/bin/sh
+#
+#= Evutils - Evmenu
+#
+# A wrapper for item selection programs using rofi for a GUI menu and fzf for
+# a terminal menu.
+#
+#
+#== Synopsis
+#
+# ... | evmenu [options]
+# evmenu [options] < file
+# evmenu [options] --list new-line-separated-list
+# evmenu [options] -l new-line-separated-list
+#
+#
+#== Options
+#
+# -p prompt, --prompt prompt
+#    The prompt to display for the menu.
+# 
+# -f, --fuzzy
+#    Use menu program fuzzy search capabilities.
+#    GUI Menu (rofi) only.
+#
+# -i, --ignore
+#    If the list doesn't contain query input then print out output of the
+#    inputted query.
+#
+# -h, --mask-input
+#    Mask the inputs. Useful when using evmenu as a password prompt. This will
+#    also enable --ignore option.
+#    GUI Menu (rofi) only.
+# 
+# -v, --preview
+#    Show previews if the hovered item is a file.
+#    Fzf only.
+# 
+# -l new-line-separated-list, --list new-line-separated-list
+#    The list to use instead of getting it from stdin
+# 
+# --gui
+#    Use GUI menu (rofi). If not in a graphical environment, terminal menu is used.
+#    Additional options can be set in gui_menu_opts in configuration file. If in
+#    a graphical environment, this is the default menu that is used.
+# 
+# --term
+#    Use terminal menu (fzf). Additional options can be set in
+#    term_menu_opts in configuration file. If not in a graphical
+#    environment, this is the default menu that
+#    is used.
+#
+# -d, --dry-run
+#    Print the computed command instead of running it.
+
+
+
+. "$EVUTILS_HOME/lib/program"
+. "$EVUTILS_HOME/lib/config"
+
+_prompt=""
+_fuzzy_search=1
+_always_match=0
+_masked_input=1
+_show_previews=1
+_list=""
+_menu_type=""
+_dry_run=1
+
+_menu_cmd=""
+_menu_opts=""
+_gui_menu_opts="-dmenu -i -keep-right -sorting-method fzf"
+_term_menu_opts="--keep-right"
+
+# Set the menu program options based on options of evmenu.
+#
+_set_menu_opts() {
+    if [ "$_prompt" ]; then
+        _gui_menu_opts="${_gui_menu_opts} -p '${_prompt}'"
+        _term_menu_opts="${_term_menu_opts} --prompt='${_prompt} '"
+    else
+        _gui_menu_opts="${_gui_menu_opts} -p ''"
+    fi
+    if [ "$_fuzzy_search" -eq 0 ]; then
+        _gui_menu_opts="${_gui_menu_opts} -matching fuzzy"
+    else
+        _term_menu_opts="${_term_menu_opts} --exact"
+    fi
+    if [ "$_masked_input" -eq 0 ]; then
+        _gui_menu_opts="${_gui_menu_opts} -password"
+    elif [ "$_always_match" -eq 0 ]; then
+        _gui_menu_opts="${_gui_menu_opts} -no-custom"
+        _term_menu_opts="${_term_menu_opts} --bind enter:accept-non-empty --bind double-click:accept-non-empty"
+    fi
+    if [ "$_show_previews" -eq 0 ]; then
+        if is_installed "bat"; then
+            _term_menu_opts="${_term_menu_opts} --preview='bat --color=never {}'"
+        else
+            _term_menu_opts="${_term_menu_opts} --preview='cat {}'"
+        fi
+    fi
+
+    _gui_menu_opts="${EVUTILS_GUI_MENU_OPTS} ${_gui_menu_opts}"
+    _term_menu_opts="${EVUTILS_TERM_MENU_OPTS} ${_term_menu_opts}"
+}
+
+# Set the menu command.
+#
+_set_menu() {
+    if ! [ "$_menu_type" ]; then
+        if [ "$DISPLAY" ]; then
+            _menu_type=GUI
+        else
+            _menu_type=TERM
+        fi
+    elif ! [ "$DISPLAY" ] && [ "$_menu_type" = GUI ]; then
+        _menu_type=TERM
+        log_warning "Not in a graphical environment. Using terminal menu..."
+    fi
+
+    case $_menu_type in
+        TERM)
+            _menu_cmd="fzf"
+            _menu_opts=$_term_menu_opts
+            ;;
+        GUI)
+            _menu_cmd="rofi"
+            _menu_opts=$_gui_menu_opts
+            ;;
+    esac
+}
+
+# Run the menu.
+#
+_run() {
+    if [ "$_list" ]; then
+        if [ "$_dry_run" -eq 0 ]; then
+            eval echo "echo \"$_list\" | eval \"$_menu_cmd $_menu_opts\""
+        else
+            echo "$_list" | eval "$_menu_cmd $_menu_opts"
+        fi
+    else
+        if [ "$_dry_run" -eq 0 ]; then
+            eval echo "$_menu_cmd $_menu_opts"
+        else
+            eval "$_menu_cmd $_menu_opts"
+        fi
+    fi
+}
+
+main() {
+    while [ "$1" ]; do
+        case $1 in
+            -p|--prompt)
+                _prompt=$2
+                shift
+                ;;
+            -f|--fuzzy)
+                _fuzzy_search=0
+                ;;
+            -i|--ignore)
+                _always_match=1
+                ;;
+            -h|--mask-input)
+                _masked_input=0
+                ;;
+            -v|--preview)
+                _show_previews=0
+                ;;
+            -l|--list)
+                _list=$2
+                shift
+                ;;
+            --gui)
+                _menu_type=GUI
+                ;;
+            --term)
+                _menu_type=TERM
+                ;;
+            -?*)
+                log_warning "Unknown option ${1}. Ignoring..."
+                ;;
+        esac
+
+        shift
+    done
+
+    _set_menu_opts
+    _set_menu
+    _run
+}
+
+main "$@"
+

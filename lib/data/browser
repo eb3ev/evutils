@@ -1,0 +1,11 @@
+
+#= Evutils - Browser Data
+#
+# Browser Name,Browser Command,New Tab Option,New Window Option
+
+
+
+Firefox,firefox,--new-tab,--new-window
+Qutebrowser,qutebrowser,--target tab,--target window
+Chromium,chromium,,--new-window
+Brave,brave,,--new-window

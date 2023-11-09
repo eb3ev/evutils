@@ -1,0 +1,173 @@
+#!/bin/sh
+#
+#= Evutils = Evfm
+#
+# Open terminal file manager.
+#
+#
+#== Synopsis
+#
+# evfm [options] --dir /dir/path
+# evfm [options] /dir/path
+# evfm [options] -- /dir/path
+#
+#
+#== Options
+#
+# -f terminal-file-manager, --fm terminal-file-manager
+#    Override the terminal file manager to use set in configuration file.
+#
+# -d /dir/path, --dir /dir/path
+#    The directory to start the file manager in. Otherwise it will start in current
+#    working directory.
+# 
+# -n, --new-term
+#    Open terminal file manager in a new terminal using evterm. This option will
+#    be enabled by default if not run from an interactive shell. This option is
+#    ignored if not in a graphical environment.
+#
+# -c, --use-clipboard
+#    Get directory path from clipboard instead.
+#
+# --no-fork
+#    evterm is forked by default. Pass to disable.
+#
+# --dry-run
+#    Print the computed command instead of running it.
+
+
+. "$EVUTILS_HOME/lib/log"
+. "$EVUTILS_HOME/lib/program"
+. "$EVUTILS_HOME/lib/clipboard"
+. "$EVUTILS_HOME/lib/config"
+
+_term_fm=""
+_open_new_term=1
+_use_clipboard=1
+_fork=0
+_dry_run=1
+_dir=""
+
+_term_fm_cmd=""
+
+# Update directory to start in if --use-clipboard is set.
+#
+_update_dir() {
+    if [ "$_use_clipboard" -eq 0 ]; then
+        clipboard=$(get_clipboard)
+
+        if [ -d "$clipboard" ]; then
+            _dir=$clipboard
+        fi
+    fi
+}
+
+# Set the file manager to use and the command to run.
+#
+_set_fm() {
+    if ! [ "$_term_fm" ]; then
+        if ! [ "$EVUTILS_TERM_FM" ]; then
+            log_error "term_fm unset in configuration file. Exiting..."
+            exit 1
+        elif is_not_installed "$EVUTILS_TERM_FM"; then
+            log_error "${EVUTILS_TERM_FM} is not installed. Exiting..."
+            exit 1
+        else
+            _term_fm=$EVUTILS_TERM_FM
+        fi
+    fi
+
+    if [ "$_dir" ]; then
+        _term_fm_cmd="${_term_fm} '$_dir'"
+    else
+        _term_fm_cmd=$_term_fm
+    fi
+
+    if ! { [ -t 0 ] || [ -p /dev/stdin ]; }; then
+        _open_new_term=0
+    fi
+
+    if [ "$_open_new_term" -eq 0 ] && [ "$DISPLAY" ]; then
+        if [ "$_fork" -eq 0 ]; then
+            _term_fm_cmd="evterm -- '${_term_fm_cmd}'"
+        else
+            _term_fm_cmd="evterm --no-fork -- '${_term_fm_cmd}'"
+        fi
+    fi
+}
+
+# Run the terminal file manager.
+#
+_run() {
+    if [ "$_dry_run" -eq 0 ]; then
+        eval echo "$_term_fm_cmd"
+    else
+        eval "$_term_fm_cmd"
+    fi
+}
+
+main() {
+    while [ "$1" ]; do
+        case $1 in
+            -f|--fm)
+                if is_installed "$2"; then
+                    _term_fm=$2
+                else
+                    log_warning "${2} not installed. Ignoring..."
+                fi
+                shift
+                ;;
+            -d|--dir)
+                if [ -d "$2" ]; then
+                    _dir=$2
+                else
+                    log_warning "Invalid directory ${2}. Ignoring..."
+                fi
+                shift
+                ;;
+            -n|--new-term)
+                _open_new_term=0
+                ;;
+            -c|--use-clipboard)
+                _use_clipboard=0
+                ;;
+            --no-fork)
+                _fork=1
+                ;;
+            --dry-run)
+                _dry_run=0
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -?*)
+                log_warning "Unknown option ${1}. Ignoring..."
+                ;;
+            *)
+                if [ -d "$1" ]; then
+                    _dir=$1
+                else
+                    log_warning "Invalid directory ${1}. Ignoring..."
+                fi
+                ;;
+        esac
+        shift
+    done
+
+    while [ "$1" ]; do
+        if [ -d "$1" ]; then
+            _dir=$1
+        else
+            log_warning "Invalid directory ${1}. Ignoring..."
+        fi
+        shift
+    done
+
+    _update_dir
+    _set_fm
+    _run
+}
+
+main "$@"
+

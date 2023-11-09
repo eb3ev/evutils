@@ -1,0 +1,14 @@
+#
+#= Bookmarks
+#
+# Bookmarks file. Blank lines and lines starting with # are ignored.
+#
+# To add a bookmark, add a line in the format below with values separated with ' , '.
+# <Bookmark Name> , <URLs> ...
+
+
+
+GitHub/evutils , https://github.com/eb3ev/evutils
+
+Search Engines , https://www.google.com https://duckduckgo.com
+

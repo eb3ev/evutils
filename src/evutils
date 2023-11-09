@@ -1,0 +1,145 @@
+#!/bin/sh
+#
+#= Evutils
+#
+# Evutils controller.
+#
+#
+#== Synopsis
+#
+# evutils [options] --cmd command ...
+# evutils [options] command ...
+# evutils [options] -- command ...
+#
+#
+#== Options
+#
+# -c command, --cmd command
+#    The command to run.
+#    Available commands:
+#    clear-cache = Clears all cache created.
+#    rm-cache = Deletes all cache created.
+#    clear-history = Clears all history.
+#    clear-log = Clears logs.
+#    log = Show logs using less.
+#    elog = Show logs using evedit.
+
+
+
+. "$EVUTILS_HOME/lib/log"
+. "$EVUTILS_HOME/lib/list"
+. "$EVUTILS_HOME/lib/cache"
+. "$EVUTILS_HOME/lib/config"
+
+_cmds=""
+
+# Run the commands.
+#
+_run() {
+    IFS=:
+    for cmd in $_cmds; do
+        unset IFS
+        case $cmd in
+            clear-cache)
+                log_status "Clearing cache..."
+                { clear_cache && log_status "Cache cleared."; } \
+                    || log_error "Clearing cache failed."
+                ;;
+            rm-cache)
+                log_status "Deleting cache..."
+                { clear_cache && log_status "Cache deleted."; } \
+                    || log_error "Deleting cache failed."
+                ;;
+            clear-history)
+                log_status "Clearing history..."
+                { clear_history && log_status "History cleared."; } \
+                    || log_error "Clearing history failed."
+                ;;
+            clear-log)
+                log_status "Clearing logs..."
+                { clear_logs && log_status "Logs cleared."; } \
+                    || log_error "Clearing logs failed."
+                ;;
+            log)
+                if [ -e "$EVUTILS_LOGS" ]; then
+                    less "$EVUTILS_LOGS"
+                else
+                    log_status "No logs."
+                fi
+                ;;
+            elog)
+                if [ -e "$EVUTILS_LOGS" ]; then
+                    evedit --no-cache -- "$EVUTILS_LOGS"
+                else
+                    log_status "No logs."
+                fi
+                ;;
+        esac
+    done
+}
+
+# Returns true if the command option is supported and false otherwise.
+# @param {string} 1 The command option
+# @returns {bool} True if the command option is supported and false otherwise.
+#
+is_available_cmd() {
+    case $1 in
+        clear-cache|\
+            rm-cache|\
+            clear-history|\
+            clear-log|\
+            log|\
+            elog)
+            return 0
+            ;;
+    esac
+    return 1
+}
+
+main() {
+    while [ "$1" ]; do
+        case $1 in
+            -c|--cmd)
+                if is_available_cmd "$2"; then
+                    _cmds=$(list_cat "$_cmds" "$2" ":")
+                else
+                    log_warning "Unknown command ${2}. Ignoring..."
+                fi
+                shift
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -?*)
+                log_warning "Unknown option ${1}. Ignoring..."
+                ;;
+            *)
+                if is_available_cmd "$1"; then
+                    _cmds=$(list_cat "$_cmds" "$1" ":")
+                else
+                    log_warning "Unknown command ${1}. Ignoring..."
+                fi
+                ;;
+        esac
+        shift
+    done
+
+    while [ "$1" ]; do
+        if is_available_cmd "$1"; then
+            _cmds=$(list_cat "$_cmds" "$1" ":")
+        else
+            log_warning "Unknown command ${1}. Ignoring..."
+        fi
+        shift
+    done
+
+    if [ "$_cmds" ]; then
+        _run
+    else
+        log_status "No commands to run. Exiting..."
+    fi
+}
+
+main "$@"
+

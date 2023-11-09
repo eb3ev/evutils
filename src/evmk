@@ -1,0 +1,247 @@
+#!/bin/sh
+#
+#= Evutils - Evmk
+#
+# Make new files, directories, etc.
+#
+#
+#== Synopsis
+#
+# evmk [options] --file /path/to/file
+# evmk [options] /path/to/file
+# evmk [options] -- /path/to/file
+#
+#
+#== Options
+#
+# -f /path/to/file, --file /path/to/file
+#    Create a new plain text file in the path provided. It will create any parent
+#    directories as needed. If the path to the file already exists, it won't create
+#    the file unless --force option is passed. If no --file or --dir is passed, then
+#    be prompted for the new file name.
+#
+# -d /dir/path, --dir /dir/path
+#    Create a new directory in the path provided. It will create any parent
+#    directories as needed. If the directory already exists, this will do nothing.
+#
+# -b shebang-type, --shebang shebang-type
+#    Include a shebang in the new file. This option is ignored if a directory is
+#    being created instead.
+#    Shebang Types:
+#    sh = !/bin/sh
+#    bash = !/bin/bash
+#    zsh = !/bin/zsh
+#    dash = !/bin/dash
+#    html = <!DOCTYPE html>
+#    
+# -a string, --add string, -i string, --include string
+#    Add the string to the new file. If a directory is being created, this option
+#    is ignored.
+#
+# -s /path/to/file, --source /path/to/file
+#    This will copy the contents of the source file into the new file. If a directory
+#    is being created. It will instead copy this file to that directory if the file
+#    doesn't already exist in that directory.
+#
+# -x, --executable
+#    Make the created file into an executable file. This option is ignored if a
+#    directory is being created.
+#
+# -o, --overwrite, --force
+#    Overwrite any existing files.
+
+
+
+. "$EVUTILS_HOME/lib/log"
+. "$EVUTILS_HOME/lib/file"
+. "$EVUTILS_HOME/lib/list"
+
+_files=""
+_dirs=""
+_shebang_type=""
+_include=""
+_source_file=""
+_make_executable=1
+_overwrite=1
+
+# Set the files to create.
+#
+_set_file() {
+    if [ "$_files" ]; then
+        return
+    elif [ "$_dirs" ]; then
+        return
+    fi
+
+    while true; do
+        if [ "$_make_executable" -eq 0 ]; then
+            echo "New Executable File"
+        else
+            echo "New File"
+        fi
+        if [ "$_shebang_type" ]; then
+            get_val --key "$_shebang_type" --idx 2 --delim "," --list "$SHEBANGS"
+        fi
+        if [ "$_include" ]; then
+            echo "$_include"
+        fi
+        if [ "$_source_file" ]; then
+            cat "$_source_file"
+        fi
+        printf "> "
+        read -r new_file
+        if ! [ "$new_file" ]; then
+            exit
+        fi
+        new_file=$(eval echo "$new_file")
+        if ! is_valid_path "$new_file"; then
+            echo "Invalid path ${new_file}"
+            continue
+        fi
+        if [ -f "$new_file" ]; then
+            if [ "$_overwrite" -eq 1 ]; then
+                echo "${new_file} already exists. Pass --force to overwrite existing files. Exiting..."
+                exit
+            fi
+        fi
+        _files=$new_file
+        break
+    done
+}
+
+# Create a new file.
+# @param {path} 1 Path to file.
+#
+_create_new_file() {
+    case "$1" in
+        */*)
+            mkdir -p "${1%/*}" || { log_error "Creating parent directories for ${1} failed. Skipping..."; return; }
+            ;;
+    esac
+
+    if [ "$_shebang_type" ]; then
+        get_val --key "$_shebang_type" --idx 2 --delim "," --list "$SHEBANGS" > "$1" \
+            || { log_error "Adding shebang to ${1} failed. Skipping..."; return; }
+    fi
+    printf "%s" "$_include" >> "$1" || { log_error "Creating ${1} failed. Skipping..."; return; }
+
+    if [ "$_source_file" ]; then
+        cat "$_source_file" >> "$1" || { log_error "Copying contents of ${_source_file} to ${1} failed. Skipping..."; return; }
+    fi
+
+    if [ "$_make_executable" -eq 0 ]; then
+        make_executable "$1" || { log_error "Making ${1} executable failed. Skipping..."; return; }
+    fi
+
+    log_status "${1} created."
+}
+
+# Create the new files.
+#
+_run() {
+    IFS=:
+    for file in $_files; do
+        unset IFS
+        if [ -f "$file" ]; then
+            if [ "$_overwrite" -eq 0 ]; then
+                _create_new_file "$file"
+            else
+                log_warning "${file} already exists. Pass --force to overwrite existing files. Skipping..."
+            fi
+        else
+            _create_new_file "$file"
+        fi
+    done
+
+    IFS=:
+    for dir in $_dirs; do
+        unset IFS
+        mkdir -p "$dir" || log_error "Creating directory ${dir} failed. Skipping..."
+        log_status "${dir} created."
+    done
+}
+
+main() {
+    while [ "$1" ]; do
+        case $1 in
+            -f|--file)
+                if is_valid_path "$2"; then
+                    _files=$(list_cat "$_files" "$2" ":")
+                else
+                    log_error "Invalid file path ${2}. Exiting..."
+                    exit 1
+                fi
+                shift
+                ;;
+            -d|--dir)
+                if is_valid_path "$2"; then
+                    _dirs=$(list_cat "$_dirs" "$2" ":")
+                else
+                    log_error "Invalid directory path ${2}. Exiting..."
+                    exit 1
+                fi
+                shift
+                ;;
+            -b|--shebang)
+                if echo "$SHEBANGS" | grep -q -e "^${2},"; then
+                    _shebang_type=$2
+                else
+                    log_warning "Unknown shebang type ${2}. Exiting..."
+                    exit 1
+                fi
+                shift
+                ;;
+            -a|-i|--add|--include)
+                _include=$2
+                shift
+                ;;
+            -s|--source)
+                if [ -f "$2" ]; then
+                    _source_file=$2
+                else
+                    log_error "Source file ${2} doesn't exist. Exiting..."
+                    exit 1
+                fi
+                shift
+                ;;
+            -x|--executable)
+                _make_executable=0
+                ;;
+            -o|--overwrite|--force)
+                _overwrite=0
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -?*)
+                log_error "Unknown option ${1}. Exiting..."
+                exit 1
+                ;;
+            *)
+                if is_valid_path "$1"; then
+                    _files=$(list_cat "$_files" "$1" ":")
+                else
+                    log_error "Invalid file path ${1}. Exiting..."
+                    exit 1
+                fi
+        esac
+        shift
+    done
+
+    while [ "$1" ]; do
+        if is_valid_path "$1"; then
+            _files=$(list_cat "$_files" "$1" ":")
+        else
+            log_error "Invalid file path ${1}. Exiting..."
+            exit 1
+        fi
+        shift
+    done
+
+    _set_file
+    _run
+}
+
+main "$@"
+

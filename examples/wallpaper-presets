@@ -1,0 +1,39 @@
+#
+#= Wallpaper Presets
+#
+# Wallpaper presets file. Blank lines and lines starting with # are ignored.
+#
+# To add a preset, add a line in the format below with values separated with ' , '.
+# <Host Name> , <Preset Name> , <Wallpaper Setter Options>
+#
+# <Wallpaper Setter Options> format:
+# <Option Settings For A Screen>:<Option Settings For A Screen>:...
+# 
+# <Option Settings For A Screen> Format:
+# <Screen Name>;<Wallpaper Setting Option>;</path/to/wallpaper/image/file>
+#
+# <Screen Name> is the name of the screen. This can be set to 'Span' instead,
+# which will set the wallpaper to span accross all screens.
+#
+# Available <Wallpaper Setting Option> options:
+# -  Zoom
+# -  Center
+# -  Stretch
+# -  Maximise
+#
+#
+#== Notes
+#
+# -  Presets will only show on the device with the set host name.
+#
+# -  Presets that have a certain number of screens option settings set will only
+#    show when the active screen count matches it.
+
+
+
+Host Name 1 , My Preset Name 1 , Monitor1;Zoom;/usr/share/wallpapers/wallpaper.png
+
+Host Name 2 , My Preset Name 2 , Span;Zoom;/usr/share/wallpapers/wallpaper.png
+
+Host Name 3 , My Preset Name 3 , Monitor1;Zoom;/usr/share/wallpapers/wallpaper.png:Monitor2;Stretch;/usr/share/wallpapers/wallpaper.png
+

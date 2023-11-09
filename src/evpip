@@ -1,0 +1,148 @@
+#!/bin/sh
+#
+#= Evutils -Evpip
+#
+# Colour picker / pipette tool using colorpicker (https://github.com/Jack12816/colorpicker)
+#
+#
+#== Synopsis
+#
+# evpip [options]
+# evpip [options] --format format
+# evpip [options] format
+# evpip [options] -- format
+#
+#
+#== Options
+#
+# -s, --no-preview
+#    A preview of the hovered colour is shown by default. Pass to disable.
+#
+# -n, --no-copy
+#    The colour output is set in clipboard by default. Pass to disable
+#
+# -f format, --format format
+#    The format of the output. E.g. '{HEX} - {RGB}' will print '#XXXXXX - rgb(X, X, X)'
+#    By default, the format is '{HEX}'
+#    Possible format options:
+#    {HEX} = Hexadecimal colour value prefixed with #. E.g. #FFFFFF
+#    {hex} = Hexadecimal colour value without the # prefix. E.g. FFFFFF
+#    {RGB} = RGB colour integer values between 0 - 255 wrapped in rgb function. E.g. rgb(255, 255, 255).
+#    {rgb} = RGB colour integer values between 0 - 255 without the function wrap. E.g. 255, 255, 255
+#    {RGB%} = RGB colour float values between 0 - 1 wrapped in rgb function. E.g. rgb(255, 255, 255).
+#    {rgb%} = RGB colour float values between 0 - 1 without the function wrap. E.g. 255, 255, 255
+#    {r} = Red colour integer values between 0 - 255. E.g. 255
+#    {g} = Green colour integer values between 0 - 255. E.g. 255
+#    {b} = Blue colour integer values between 0 - 255. E.g. 255
+#    {r%} = Red colour float value between 0 - 1. E.g. 0.5
+#    {g%} = Green colour float value between 0 - 1. E.g. 0.5
+#    {b%} = Blue colour float value between 0 - 1. E.g. 0.5
+
+
+
+. "$EVUTILS_HOME/lib/log"
+. "$EVUTILS_HOME/lib/program"
+. "$EVUTILS_HOME/lib/math"
+. "$EVUTILS_HOME/lib/clipboard"
+
+_copy=0
+_preview=0
+_format="{HEX}"
+
+_colorpicker_output=""
+_output=""
+
+# Get the colour using colorpicker.
+#
+_get_colour() {
+    colorpicker_opts="--one-shot"
+
+    if [ "$_preview" -eq 0 ]; then
+        colorpicker_opts="${colorpicker_opts} --preview"
+    fi
+
+    _colorpicker_output=$(eval colorpicker "$colorpicker_opts" 2>/dev/null)
+
+    if ! [ "$_colorpicker_output" ]; then
+        exit
+    fi
+}
+
+# Format the output.
+#
+_format_output() {
+    _colorpicker_output=$(echo "$_colorpicker_output" | sed 's/[RGB]//g;s/[,|#:]//g;s/Hex//g')
+    hex_val=$(echo "$_colorpicker_output" | awk '{print $4}')
+    rgb_red_val=$(echo "$_colorpicker_output" | awk '{print $1}')
+    rgb_green_val=$(echo "$_colorpicker_output" | awk '{print $2}')
+    rgb_blue_val=$(echo "$_colorpicker_output" | awk '{print $3}')
+    rgb_red_percent=$(div "$rgb_red_val" 255 2)
+    rgb_green_percent=$(div "$rgb_green_val" 255 2)
+    rgb_blue_percent=$(div "$rgb_blue_val" 255 2)
+
+    _output=$(echo "$_format" \
+        | sed "s/{HEX}/#${hex_val}/g;
+            s/{hex}/${hex_val}/g;
+            s/{RGB}/rgb(${rgb_red_val}, ${rgb_green_val}, ${rgb_blue_val})/g;\
+            s/{rgb}/${rgb_red_val}, ${rgb_green_val}, ${rgb_blue_val}/g;\
+            s/{RGB%}/rgb(${rgb_red_percent}, ${rgb_green_percent}, ${rgb_blue_percent})/g;\
+            s/{rgb%}/${rgb_red_percent}, ${rgb_green_percent}, ${rgb_blue_percent}/g;\
+            s/{r}/${rgb_red_val}/g;\
+            s/{g}/${rgb_green_val}/g;\
+            s/{b}/${rgb_green_val}/g;\
+            s/{r%}/${rgb_red_percent}/g;\
+            s/{g%}/${rgb_green_percent}/g;\
+            s/{b%}/${rgb_green_percent}/g;"\
+        )
+}
+
+# Run.
+#
+_run() {
+    _get_colour
+    _format_output
+    
+    if [ "$_copy" -eq 0 ]; then
+        set_clipboard -- "$_output"
+    fi
+
+    echo "$_output"
+}
+
+main() {
+    while [ "$1" ]; do
+        case $1 in
+            -s|--no-preview)
+                _preview=1
+                ;;
+            -n|--no-copy)
+                _copy=1
+                ;;
+            -f|--format)
+                _format=$2
+                shift
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -?*)
+                log_warning "Unknown option ${1}. Ignoring..."
+                ;;
+            *)
+                _format=$1
+                ;;
+        esac
+        shift
+    done
+
+    while [ "$1" ]; do
+        _format=$1
+        shift
+    done
+
+    _run
+}
+
+main "$@"
+

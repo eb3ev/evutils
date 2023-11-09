@@ -1,0 +1,91 @@
+#!/bin/sh
+#
+#= Evutils - Clipboard Library
+#
+# Library to deal with the clipboard using xclip.
+
+
+
+. "$EVUTILS_HOME/lib/log"
+. "$EVUTILS_HOME/lib/list"
+
+# Get the value stored in clipboard (X selection) -- inside XA_CLIPBOARD by default.
+# @param -p|--primary Use XA_PRIMARY X selection instead.
+# @param -s|--secondary Use XA_SECONDARY X selection instead.
+# @returns {string} The value inside the clipboard.
+#
+get_clipboard() {
+    xselection="clipboard"
+
+    while [ "$1" ]; do
+        case $1 in
+            -p|--primary)
+                xselection="primary"
+                ;;
+            -s|--secondary)
+                xselection="secondary"
+                ;;
+        esac
+
+        shift
+    done
+
+    xclip -selection "$xselection" -o 2>/dev/null
+}
+
+# Set the value in clipboard (X selection) -- inside XA_CLIPBOARD by default.
+# @param -p|--primary Use XA_PRIMARY X selection instead.
+# @param -s|--secondary Use XA_SECONDARY X selection instead.
+# @param -n|--trailing-new-line Add a trailing new line.
+# @param {string} -t|--text|* The text to set. Add multiple --text for multiple texts
+# to set separated by new lines.
+#
+set_clipboard() {
+    xselection="clipboard"
+    trailing_new_line=1
+    text=""
+
+    while [ "$1" ]; do
+        case $1 in
+            -p|--primary)
+                xselection="primary"
+                ;;
+            -s|--secondary)
+                xselection="secondary"
+                ;;
+            -n|--trailing-new-line)
+                trailing_new_line=0
+                ;;
+            -t|--text)
+                text=$(list_cat "$text" "$2")
+                shift
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -?*)
+                ;;
+            *)
+                text=$(list_cat "$text" "$2")
+                shift
+                ;;
+        esac
+
+        shift
+    done
+
+    while [ "$1" ]; do
+        text=$(list_cat "$text" "$1")
+        shift
+    done
+
+    if [ "$trailing_new_line" -eq 0 ]; then
+        echo "$text" | xclip -selection "$xselection"
+    else
+        printf "%s" "$text" | xclip -selection "$xselection"
+    fi
+
+    log_status "Copied to clipboard - ${text}"
+}
+

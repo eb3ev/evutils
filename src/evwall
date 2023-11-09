@@ -1,0 +1,306 @@
+#!/bin/sh
+#
+#= Evutils - Evwall
+#
+# Wallpaper setter using xwallpaper.
+#
+#
+#== Synopsis
+#
+# evwall [options]
+#
+#
+#== Options
+#
+# -s, --save
+#    Save the wallpaper setter command to a script file defined in configuration.
+# 
+# -p, --use-presets
+#    Use a preset wallpaper setter options to run from a preset file defined in
+#    configuration.
+# 
+# -d, --dry-run
+#    Print the computed wallpaper setter command instead of running it.
+
+
+
+. "$EVUTILS_HOME/lib/log"
+. "$EVUTILS_HOME/lib/std"
+. "$EVUTILS_HOME/lib/screen"
+. "$EVUTILS_HOME/lib/list"
+. "$EVUTILS_HOME/lib/search"
+. "$EVUTILS_HOME/lib/file"
+. "$EVUTILS_HOME/lib/config"
+
+_save=1
+_use_presets=1
+_dry_run=1
+
+_evmenu_opts=""
+_wallpaper_dirs=""
+_setter_opts=""
+
+# Get the wallpaper presets that matches the device's name inside $EVUTILS_WALLPAPER_PRESETS.
+# @returns {list} Wallpaper presets.
+#
+_get_device_presets() {
+    hostname=$(get_hostname)
+    grep -e "^${hostname} ," -- "$EVUTILS_WALLPAPER_PRESETS"
+}
+
+# Get number of screens set in the wallpaper preset setting string.
+# @param {string} 1 Setting string.
+# @returns {u_int} Number of screens set.
+#
+_get_preset_setting_num_screens() {
+    i=0
+    IFS=:
+    for _ in $1; do
+        unset IFS
+        i=$((i + 1))
+    done
+
+    echo "$i"
+}
+
+# Updates the wallpaper presets list to match the current screen count.
+# @param {list} 1 Wallpaper presets list.
+# @returns {list} New wallpaper presets list.
+#
+_update_presets_to_screen_count() {
+    new_list=""
+    screen_count=$(get_active_screen_count)
+
+    IFS=$CHAR_NL
+    for preset in $1; do
+        unset IFS
+        setting_string=$(get_col --list "$preset" --idx 3)
+        if [ "$(_get_preset_setting_num_screens "$setting_string")" -eq "$screen_count" ]; then
+            new_list=$(list_cat "$new_list" "$preset")
+        elif echo "$setting_string" | grep -q -e "^Span;"; then
+            new_list=$(list_cat "$new_list" "$preset")
+        fi
+    done
+
+    echo "$new_list"
+}
+
+# Parse setting string into setter options.
+# @param {string} 1 Setting string.
+#
+_parse_setting_string() {
+    IFS=:
+    for screen_setting in $1; do
+        screen_name=$(get_col --idx 1 --delim ";" --list "$screen_setting")
+        if get_active_screen_names | grep -Fqx -e "$screen_name"; then
+            _setter_opts="${_setter_opts} --output ${screen_name}"
+        elif [ "$screen_name" = "Span" ]; then
+            _setter_opts="${_setter_opts} --no-randr"
+        else
+            log_error "Preset setting - screen ${screen_name} option unavailable. Exiting..."
+            exit 1
+        fi
+
+        wallpaper_opt_name=$(get_col --idx 2 --delim ";" --list "$screen_setting")
+        if echo "$WALLPAPER_OPTS" | grep -q -e "^${wallpaper_opt_name},"; then
+            wallpaper_opt=$(get_val --key "$wallpaper_opt_name" --delim "," --idx 2 --list "$WALLPAPER_OPTS")
+            _setter_opts="${_setter_opts} ${wallpaper_opt}"
+        else
+            log_error "Preset setting - invalid wallpaper option ${wallpaper_opt_name}. Exiting..."
+            exit 1
+        fi
+
+        wallpaper=$(get_col --idx 3 --delim ";" --list "$screen_setting")
+        wallpaper=$(eval echo "$wallpaper")
+
+        if [ -f "$wallpaper" ]; then
+            if is_image_file "$wallpaper"; then
+                _setter_opts="${_setter_opts} '${wallpaper}'"
+            else
+                log_error "Preset setting - invalid image file ${wallpaper}. Exiting..."
+                exit 1
+            fi
+        else
+            log_error "Preset setting - ${wallpaper} doesn't exist. Exiting..."
+            exit 1
+        fi
+        if [ "$screen_name" = "Span" ]; then
+            break
+        fi
+    done
+}
+
+# Set the setter options based on a preset.
+#
+_set_preset_setter_opts() {
+    if ! [ "$EVUTILS_WALLPAPER_PRESETS" ]; then
+        log_error "wallpaper_presets unset in configuration file. Exiting..."
+        exit 1
+    elif ! [ -r "$EVUTILS_WALLPAPER_PRESETS" ]; then
+        log_error "Invalid preset file ${EVUTILS_WALLPAPER_PRESETS}. Exiting..."
+        exit 1
+    fi
+
+    wallpaper_presets=$(_get_device_presets)
+    wallpaper_presets=$(_update_presets_to_screen_count "$wallpaper_presets")
+
+    if ! [ "$wallpaper_presets" ]; then
+        log_status "No presets available. Exiting..."
+        exit 1
+    fi
+
+    preset_name=$(get_col --idx 2 --list "$wallpaper_presets" | eval evmenu "$_evmenu_opts" --prompt " Presets")
+
+    if ! [ "$preset_name" ]; then
+        exit
+    fi
+
+    hostname=$(get_hostname)
+    setting_string=$(get_val --key "${hostname} , ${preset_name}" --idx 3 --list "$wallpaper_presets")
+    
+    _parse_setting_string "$setting_string"
+}
+
+# Set the directories to search for set in configuration file.
+#
+_set_wallpaper_dirs() {
+    if [ "$EVUTILS_WALLPAPERS_PATH" ]; then    
+        IFS=:
+        for dir in $EVUTILS_WALLPAPERS_PATH; do
+            unset IFS
+            dir=$(eval echo "$dir")
+            if [ -d "$dir" ]; then
+                _wallpaper_dirs=$(list_cat "$_wallpaper_dirs" "$dir" ":")
+            else
+                log_warning "Invalid directory ${dir} in wallpapers_dir in configuration file. Ignoring..."
+            fi
+        done
+        unset dir
+    fi
+
+    if ! [ "$_wallpaper_dirs" ]; then
+        log_status "No wallpaper directories set. Using /usr/share/wallpapers..."
+        _wallpaper_dirs="/usr/share/wallpapers"
+    fi
+}
+
+# Get the images found in $_wallpaper_dirs.
+# @returns {list} Image path.
+#
+_get_wallpapers() {
+    search_files --filter IMG --dir "$_wallpaper_dirs"
+}
+
+# Set the setter options.
+#
+_set_setter_opts() {
+    screens=$(get_active_screen_names)
+
+    if ! [ "$screens" ]; then
+        log_error "No connected screens. Exiting..."
+        exit 1
+    fi
+
+    screens=$(list_cat "$screens" "Span")
+
+    while [ "$screens" ]; do
+        # Select screen.
+        screen=$(echo "$screens" | eval evmenu "$_evmenu_opts" --prompt "''")
+        if ! [ "$screen" ]; then
+            exit
+        fi
+        case $screen in
+            Span)
+                _setter_opts="${_setter_opts} --no-randr"
+                screens=""
+                ;;
+            *)
+                _setter_opts="${_setter_opts} --output '${screen}'"
+                screens=$(list_rm --list "$screens" -- "Span")
+                screens=$(list_rm --list "$screens" -- "$screen")
+                ;;
+        esac
+
+        # Select wallpaper.
+        wallpaper=$(_get_wallpapers | eval evmenu "$_evmenu_opts" --prompt "''")
+        if ! [ "$wallpaper" ]; then
+            exit
+        fi
+
+        # Select wallpaper option setting.
+        wallpaper_opt_name=$(get_keys --delim "," --list "$WALLPAPER_OPTS" | eval evmenu "$_evmenu_opts" --prompt "'漣'")
+        if ! [ "$wallpaper_opt_name" ]; then
+            exit
+        fi
+
+        wallpaper_opt=$(get_val --key "$wallpaper_opt_name" --delim "," --idx 2 --list "$WALLPAPER_OPTS")
+
+        _setter_opts="${_setter_opts} ${wallpaper_opt} '${wallpaper}'"
+    done
+}
+
+# Set the wallpaper.
+#
+_run() {
+    if [ "$_dry_run" -eq 0 ]; then
+        eval echo "xwallpaper ${_setter_opts}"
+    else
+        if [ "$_save" -eq 0 ]; then
+            if [ "$EVUTILS_WALLPAPERRC" ]; then
+                include=$(printf "xwallpaper %s" "$_setter_opts")
+                { evmk --overwrite --shebang sh --executable --include "$include" -- "$EVUTILS_WALLPAPERRC" \
+                    && log_status "Wallpaper setter command set to ${EVUTILS_WALLPAPERRC}"; } \
+                    || { log_error "Creating wallpaper script file failed. Exiting..." && exit 1; }
+            else
+                log_warning "wallpaper_script unset in configuration file. Skipping saving..."
+            fi
+        fi
+        eval xwallpaper "$_setter_opts"
+        log_status "Wallpaper set."
+    fi
+}
+
+main() {
+    while [ "$1" ]; do
+        case $1 in
+            -s|--save)
+                _save=0
+                ;;
+            -p|--use-presets)
+                _use_presets=0
+                ;;
+            -d|--dry-run)
+                _dry_run=0
+                ;;
+            -?*)
+                log_warning "Unknown option ${1}. Ignoring..."
+                ;;
+        esac
+        shift
+    done
+
+
+    if ! { [ -t 0 ] || [ -p /dev/stdin ]; }; then
+        _evmenu_opts="${_evmenu_opts} --gui"
+    else
+        _evmenu_opts="${_evmenu_opts} --term"
+    fi
+
+    if [ "$_use_presets" -eq 0 ]; then
+        _set_preset_setter_opts
+    else
+        _set_wallpaper_dirs
+
+        if ! [ "$(_get_wallpapers)" ]; then
+            log_error "No images found to use. Exiting..."
+            exit 1
+        fi
+
+        _set_setter_opts
+    fi
+
+    _run
+}
+
+main "$@"
+

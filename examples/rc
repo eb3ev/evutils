@@ -1,0 +1,72 @@
+
+#=  Evutils - Configuration
+
+
+
+#== Programs
+
+# The default terminal to use.
+term = alacritty
+# The default terminal editor to use.
+term_editor = nvim
+# The default terminal file manager to use.
+term_fm = lf
+# The default browser use.
+browser = Firefox
+# The default image viewer to use.
+image_viewer = nsxiv
+# The default audio player to use.
+audio_player = mpv
+# The default video player to use.
+video_player = mpv
+# The default document reader to use.
+reader = zathura
+
+
+#== Settings
+
+#=== General
+
+# Enable / disable notifications. Enabled by default.
+notifications = true
+# Enable / disable caching log. Enabled by default.
+# Log found in ${XDG_CACHE_DIR:-$HOME/.cache}/evutils/log
+log = true
+# Enable / disable status messages to stdout. Enabled by default.
+verbose = true
+
+#=== evmenu
+
+# Additional options to pass for GUI menu (rofi).
+gui_menu_opts = ""
+# Options for terminal menu (fzf).
+term_menu_opts = ""
+
+
+#== Bookmarks - evbookmarks
+
+# Path to bookmarks file to use.
+bookmarks = "${XDG_CONFIG_HOME:-$HOME/.config}/evutils/bookmarks"
+
+
+#== Screenlayout - evscreen
+
+# Path to screen layout setter script file.
+screenlayout_script = "${XDG_CONFIG_HOME:-$HOME/.config}/x11/set-screenlayout"
+# Path to screen layout presets file.
+screenlayout_presets = "${XDG_CONFIG_HOME:-$HOME/.config}/evutils/screenlayout-presets"
+
+
+#== Wallpaper - evwall
+
+# Path to wallpaper setter script file.
+wallpaper_script = "${XDG_CONFIG_HOME:-$HOME/.config}/x11/set-wallpaper"
+# Path to wallpaper presets file.
+screenlayout_presets = "${XDG_CONFIG_HOME:-$HOME/.config}/evutils/wallpaper-presets"
+# Directories to search for wallpapers. If unset, evwall will search for images in /usr/share/wallpapers.
+# List separated by :.
+wallpaper_dirs = "\
+/usr/share/wallpapers:\
+~/pictures/wallpapers\
+"
+

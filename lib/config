@@ -1,0 +1,194 @@
+#!/bin/sh
+#
+#= Evutils - Configuration Library
+#
+# Library to handle configuration file for evutils.
+
+
+
+if [ "$EVUTILS_CONFIG_UPDATED" ]; then
+    return
+fi
+
+EVUTILS_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}/evutils"
+EVUTILSRC="$EVUTILS_CONFIG_HOME/rc"
+EVUTILS_DEFRC="$EVUTILS_HOME/examples/rc"
+EVBROWSERRC="$EVUTILS_CONFIG_HOME/evbrowserrc"
+
+# Configuration Variables
+# The default terminal to use.
+EVUTILS_TERM=""
+# The default terminal editor to use.
+EVUTILS_TERM_EDITOR=""
+# The default terminal file manager to use.
+EVUTILS_TERM_FM=""
+# Additional options for GUI menu.
+EVUTILS_GUI_MENU_OPTS=""
+# Additional options for terminal menu.
+EVUTILS_TERM_MENU_OPTS=""
+# The default browser use.
+EVUTILS_BROWSER=""
+# The default image viewer to use.
+EVUTILS_IMAGE_VIEWER=""
+# The default audio player to use.
+EVUTILS_AUDIO_PLAYER=""
+# The default video player to use.
+EVUTILS_VIDEO_PLAYER=""
+# The default document reader to use.
+EVUTILS_READER=""
+# Path to bookmarks file to use.
+EVUTILS_BOOKMARKS=""
+# Path to screen layout setter script file.
+EVUTILS_SCREENLAYOUTRC=""
+# Path to screen layout presets file.
+EVUTILS_SCREENLAYOUT_PRESETS=""
+# Path to wallpaper setter script file.
+EVUTILS_WALLPAPERRC=""
+# Path to wallpaper presets file.
+EVUTILS_WALLPAPER_PRESETS=""
+# Directories to search for wallpapers. List separated by :.
+EVUTILS_WALLPAPERS_PATH=""
+# Enable/Disable notifications.
+EVUTILS_NOTIFICATIONS=0
+# Enable/Disable logging errors.
+EVUTILS_LOG=0
+# Enable/Disable status messages.
+EVUTILS_VERBOSE=0
+
+# Create evutils configuration directory if it doesn't exist
+#
+mk_config_dir() {
+    mkdir -p "$EVUTILS_CONFIG_HOME"
+}
+
+# Make a running configuration file if it doesn't exist. 
+#
+mk_config_file() {
+    mk_config_dir
+
+    if ! [ -e "$EVUTILSRC" ]; then
+        cp "$EVUTILS_DEFRC" "$EVUTILSRC"
+    fi
+}
+
+# Update configuration variables from running configuration file.
+#
+update_config() {
+    mk_config_file
+
+    tmp=$(mktemp)
+
+    awk '!/^ *#/ && NF' "$EVUTILSRC" > "$tmp"
+
+    while IFS=$(printf '[ \t]*=[ \t]*') read name value; do
+        unset IFS
+        case $name in
+            term)
+                setting_val=$(eval echo "$value")
+                EVUTILS_TERM=$setting_val
+                ;;
+            term_editor)
+                setting_val=$(eval echo "$value")
+                EVUTILS_TERM_EDITOR=$setting_val
+                ;;
+            term_fm)
+                setting_val=$(eval echo "$value")
+                EVUTILS_TERM_FM=$setting_val
+                ;;
+            gui_menu_opts)
+                setting_val=$(eval echo "$value")
+                EVUTILS_GUI_MENU_OPTS=$setting_val
+                ;;
+            term_menu_opts)
+                setting_val=$(eval echo "$value")
+                EVUTILS_TERM_MENU_OPTS=$setting_val
+                ;;
+            browser)
+                setting_val=$(eval echo "$value")
+                EVUTILS_BROWSER=$setting_val
+                ;;
+            image_viewer)
+                setting_val=$(eval echo "$value")
+                EVUTILS_IMAGE_VIEWER=$setting_val
+                ;;
+            audio_player)
+                setting_val=$(eval echo "$value")
+                EVUTILS_AUDIO_PLAYER=$setting_val
+                ;;
+            video_player)
+                setting_val=$(eval echo "$value")
+                EVUTILS_VIDEO_PLAYER=$setting_val
+                ;;
+            reader)
+                setting_val=$(eval echo "$value")
+                EVUTILS_READER=$setting_val
+                ;;
+            bookmarks)
+                setting_val=$(eval echo "$value")
+                EVUTILS_BOOKMARKS=$setting_val
+                ;;
+            screenlayout_script)
+                setting_val=$(eval echo "$value")
+                EVUTILS_SCREENLAYOUTRC=$setting_val
+                ;;
+            screenlayout_presets)
+                setting_val=$(eval echo "$value")
+                EVUTILS_SCREENLAYOUT_PRESETS=$setting_val
+                ;;
+            wallpaper_script)
+                setting_val=$(eval echo "$value")
+                EVUTILS_WALLPAPERRC=$setting_val
+                ;;
+            wallpaper_presets)
+                setting_val=$(eval echo "$value")
+                EVUTILS_WALLPAPER_PRESETS=$setting_val
+                ;;
+            wallpaper_dirs)
+                setting_val=$(eval echo "$value")
+                EVUTILS_WALLPAPERS_PATH=$setting_val
+                ;;
+            notifications)
+                setting_val=$(eval echo "$value")
+                case $setting_val in
+                    true|1)
+                        EVUTILS_NOTIFICATIONS=0
+                        ;;
+                    false|0)
+                        EVUTILS_NOTIFICATIONS=1
+                        ;;
+                esac
+                ;;
+            log)
+                setting_val=$(eval echo "$value")
+                case $setting_val in
+                    true|1)
+                        EVUTILS_LOG=0
+                        ;;
+                    false|0)
+                        EVUTILS_LOG=1
+                        ;;
+                esac
+                ;;
+            verbose)
+                setting_val=$(eval echo "$value")
+                case $setting_val in
+                    true|1)
+                        EVUTILS_VERBOSE=0
+                        ;;
+                    false|0)
+                        EVUTILS_VERBOSE=1
+                        ;;
+                esac
+                ;;
+            *)
+                echo ":: [WARNING] evutils Configuration: Unknown setting $name. Ignoring..." >&2
+                ;;
+        esac
+    done < "$tmp"
+
+    rm -f "$tmp"
+
+    EVUTILS_CONFIG_UPDATED=0
+}
+
+update_config

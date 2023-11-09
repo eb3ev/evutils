@@ -1,0 +1,115 @@
+#!/bin/sh
+#
+#= Evutils - Cache Library
+#
+# Library to handle dealing with caching for evutils programs.
+
+
+
+# Cache Files
+EVUTILS_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}/evutils"
+# Error Logs.
+EVUTILS_LOGS="$EVUTILS_CACHE_HOME/log"
+# Cache of installed binaries in the system.
+EVUTILS_PROGRAM_CACHE="$EVUTILS_CACHE_HOME/programs"
+# Cache of evlaunch's recently launched programs.
+EVLAUNCH_HISTFILE="$EVUTILS_CACHE_HOME/evlaunch-history"
+# Cache of evedit's recently opened files.
+EVEDIT_HISTFILE="$EVUTILS_CACHE_HOME/evedit-history"
+# Cache of evedit's recently opened files.
+EVOPEN_HISTFILE="$EVUTILS_CACHE_HOME/evopen-history"
+# Cache of evbookarks's recently opened bookmarks.
+EVBOOKMARKS_HISTFILE="$EVUTILS_CACHE_HOME/evbookmarks-history"
+# Cache of evemoji's recently used emojis.
+EVEMOJI_HISTFILE="$EVUTILS_CACHE_HOME/evemoji-history"
+
+# Create evutil's cache dir.
+#
+create_cache_dir() {
+    mkdir -p "$EVUTILS_CACHE_HOME"
+}
+
+# Delete evutil's cache.
+#
+delete_cache() {
+    rm -rf "$EVUTILS_CACHE_HOME" >/dev/null 2>&1
+}
+
+# Clear error logs
+#
+clear_logs() {
+    if [ -f "$EVUTILS_LOGS" ]; then
+        printf "" > "$EVUTILS_LOGS"
+    fi
+}
+
+# Clear installed programs cache.
+#
+clear_program_cache() {
+    if [ -f "$EVUTILS_PROGRAM_CACHE" ]; then
+        printf "" > "$EVUTILS_PROGRAM_CACHE"
+    fi
+}
+
+# Clear evlaunch's cache.
+#
+clear_evlaunch_hist() {
+    if [ -f "$EVLAUNCH_HISTFILE" ]; then
+        printf "" > "$EVLAUNCH_HISTFILE"
+    fi
+}
+
+# Clear evedit's cache.
+#
+clear_evedit_hist() {
+    if [ -f "$EVEDIT_HISTFILE" ]; then
+        printf "" > "$EVEDIT_HISTFILE"
+    fi
+}
+
+# Clear evopen's cache.
+#
+clear_evopen_hist() {
+    if [ -f "$EVOPEN_HISTFILE" ]; then
+        printf "" > "$EVOPEN_HISTFILE"
+    fi
+}
+
+# Clear evbookmarks's cache.
+#
+clear_evbookmarks_hist() {
+    if [ -f "$EVBOOKMARKS_HISTFILE" ]; then
+        printf "" > "$EVBOOKMARKS_HISTFILE"
+    fi
+}
+
+# Clear evemoji's cache.
+#
+clear_evemoji_hist() {
+    if [ -f "$EVEMOJI_HISTFILE" ]; then
+        printf "" > "$EVEMOJI_HISTFILE"
+    fi
+}
+
+# Clear all evutils history.
+#
+clear_history() {
+    clear_evlaunch_hist
+    clear_evedit_hist
+    clear_evopen_hist
+    clear_evbookmarks_hist
+    clear_evemoji_hist
+}
+
+# Clear all evutils programs cache.
+#
+clear_cache() {
+    clear_logs
+    clear_program_cache
+    clear_evlaunch_hist
+    clear_evedit_hist
+    clear_evopen_hist
+    clear_evbookmarks_hist
+    clear_evemoji_hist
+}
+

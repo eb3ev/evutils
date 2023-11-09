@@ -1,0 +1,108 @@
+#!/bin/sh
+#
+#= Evutils - Screen Library
+#
+# Library for dealing with the screen.
+
+
+
+. "$EVUTILS_HOME/lib/std"
+. "$EVUTILS_HOME/lib/list"
+ 
+# Screen layout position options.
+# Option name,xrandr option
+SCREENLAYOUT_POS_OPTS="\
+Same,--same-as
+Left,--left-of
+Right,--right-of
+Above,--above
+Below,--below\
+"
+
+# Screen layout rotation options.
+# Option name,xrandr option
+SCREENLAYOUT_ROTATION_OPTS="\
+Normal,--rotate normal
+Left,--rotate left
+Right,--rotate right
+Inverted,--rotate inverted\
+"
+
+# Wallpaper options.
+# Option name,xwallpaper option
+WALLPAPER_OPTS="\
+Zoom,--zoom
+Center,--center
+Stretch,--stretch
+Maximise,--maximize\
+"
+
+# Get the device's name
+# @returns {string} Device hostname.
+#
+get_hostname() {
+    cat /proc/sys/kernel/hostname 2>/dev/null
+}
+
+# Get a list of the names of active screens.
+# @returns {list} Active screens names.
+#
+get_active_screen_names() {
+    xrandr --listactivemonitors | awk '!/^Monitors: / {print $4}'
+}
+
+# Get a list of the names of connected screens.
+# @returns {list} Connected screens name.
+#
+get_screen_names() {
+    xrandr -q | awk '/ connected / {print $1}'
+}
+
+# Get a list of the names of all available screen.
+# @returns {list} All available screens name.
+#
+get_all_screen_names() {
+    xrandr -q | awk '/ connected / || / disconnected / {print $1}'
+}
+
+# Get the active screens count.
+# @returns {u_int} The active screens count.
+#
+get_active_screen_count() {
+    get_active_screen_names | list_len
+}
+
+# Get the connected screens count.
+# @returns {u_int} The connected screens count.
+#
+get_screen_count() {
+    get_screen_names | list_len
+}
+
+# Get a list of all available screen resolution modes of a screen.
+# @param {string} 1 The screen name / ID.
+# @returns {list} Screen resoloution modes.
+#
+get_screen_resolutions() {
+    screen_resolutions=""
+
+    screen_found=1
+
+    IFS=$CHAR_NL
+    for line in $(xrandr -q); do
+        unset IFS
+        if [ "$screen_found" -eq 0 ]; then
+            if echo "$line" | grep -q -e ' connected \| disconnected '; then
+                break
+            fi
+            screen_resolution=$(echo "$line" | awk '{print $1}')
+            screen_resolutions=$(list_cat "$screen_resolutions" "$screen_resolution")
+        fi
+        if echo "$line" | grep -Fq -e "$1"; then
+            screen_found=0
+        fi
+    done
+
+    echo "$screen_resolutions"
+}
+

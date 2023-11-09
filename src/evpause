@@ -1,0 +1,75 @@
+#!/bin/sh
+#
+#= Evutils - Evpause
+#
+# Play / pause media players. If multiple players are running then evmenu is used
+# to select which player to control.
+#
+#
+#== Synopsis
+#
+# evpause
+
+
+
+. "$EVUTILS_HOME/lib/log"
+. "$EVUTILS_HOME/lib/media"
+. "$EVUTILS_HOME/lib/list"
+
+_PLAY_ALL_OPT="  Play All"
+_PAUSE_ALL_OPTS="  Pause All"
+
+_player=""
+
+# Set the player to control.
+#
+_set_player() {
+    players=$(get_running_players)
+
+    if ! [ "$players" ]; then
+        log_status "No running players. Exiting..."
+        exit
+    fi
+
+    if [ "$(list_len --list "$players")" -eq 1 ]; then
+        _player=$players
+        return
+    fi
+
+    players=$(list_cat "$players" "$_PLAY_ALL_OPT")
+    players=$(list_cat "$players" "$_PAUSE_ALL_OPTS")
+
+    if ! { [ -t 0 ] || [ -p /dev/stdin ]; }; then
+        _player=$(echo "$players" | evmenu --gui --prompt " ")
+    else
+        _player=$(echo "$players" | evmenu --term --prompt " ")
+    fi
+
+    if ! [ "$_player" ]; then
+        exit
+    fi
+}
+
+# Control the player.
+#
+_run() {
+    case $_player in
+        "$_PLAY_ALL_OPT")
+            player_play
+            ;;
+        "$_PAUSE_ALL_OPTS")
+            player_pause
+            ;;
+        *)
+            player_toggle "$_player"
+            ;;
+    esac
+}
+
+main() {
+    _set_player
+    _run
+}
+
+main
+

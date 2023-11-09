@@ -1,0 +1,18 @@
+#!/bin/sh
+#
+#= Evutils - Evpass
+#
+# Use evmenu as a password prompt.
+#
+#
+#== Synopsis
+#
+# evpass
+# SUDO_ASKPASS=evpass cmd
+
+main() {
+    printf "" | evmenu --mask-input --prompt ""
+}
+
+main
+

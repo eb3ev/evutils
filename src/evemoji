@@ -1,0 +1,89 @@
+#!/bin/sh
+#
+#= Evutils - Evemoji
+#
+# Use evmenu to select an emoji and copy to clipboard.
+#
+# 
+#== Synopsis
+#
+# evemoji [options]
+#
+#
+#== Options
+#
+# -h, --use-history
+#    Recently used emojis will be shown at the top of the list.
+# 
+# -p prompt, --prompt prompt
+#    Use a different prompt for evmenu. Default is "Emoji".
+
+
+
+. "$EVUTILS_HOME/lib/log"
+. "$EVUTILS_HOME/lib/clipboard"
+. "$EVUTILS_HOME/lib/cache"
+
+EVUTILS_DATA_EMOJIS="$EVUTILS_HOME/lib/data/emojis"
+
+_use_history=1
+_prompt="Emoji"
+
+# Get emoji list.
+# @returns {list} Emoji data list.
+#
+get_emoji() {
+    emoji_list=$EVUTILS_DATA_EMOJIS
+
+    if [ "$_use_history" -eq 0 ]; then
+        if ! [ -e "$EVEMOJI_HISTFILE" ]; then
+            create_cache_dir
+            cp "$EVUTILS_DATA_EMOJIS" "$EVEMOJI_HISTFILE"
+        fi
+
+        emoji_list=$EVEMOJI_HISTFILE
+    fi
+
+    cat "$emoji_list"
+}
+
+# Run.
+#
+_run() {
+    selection=$(get_emoji | evmenu --prompt "$_prompt")
+
+    if ! [ "$selection" ]; then
+        exit
+    fi
+
+    emoji=${selection%% *}
+
+    if [ "$_use_history" -eq 0 ]; then
+        move_to_top --file "$EVEMOJI_HISTFILE" -- "$selection"
+    fi
+
+    set_clipboard -- "$emoji"
+}
+
+main() {
+    while [ "$1" ]; do
+        case $1 in
+            -h|--use-history)
+                _use_history=0
+                ;;
+            -p|--prompt)
+                _prompt=$2
+                shift
+                ;;
+            -?*)
+                log_warning "Unknown option ${1}. Ignoring..."
+                ;;
+        esac
+        shift
+    done
+
+    _run
+}
+
+main "$@"
+

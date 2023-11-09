@@ -1,0 +1,151 @@
+#!/bin/sh
+#
+#= Evutils - Search Library
+#
+# Library for search functions.
+
+
+
+. "$EVUTILS_HOME/lib/list"
+. "$EVUTILS_HOME/lib/program"
+
+# Search for files or directories using fd.
+# @param -h|--hidden Include hidden files / directories in the search.
+# @param -n|--non-recursive Don't search through directories recursively.
+# @param {filetype} -t|--type Filetype to search for. If unset, all Filetypes
+# are searched. To search for multiple filetypes, separate filetypes using :,
+# e.g. --type FILE:DIR.
+# Filetypes:
+# FILE = Search for files.
+# DIR = Search for directories.
+# @param {path} -d|--dir Directory to search in. If no directories are passed,
+# current working directory is used. To search through multiple directories,
+# separate directory paths using :, e.g. /dir/path1:/dir/path2.
+# @param {filter} -f|--filter The filter to filter searches. To use multiple
+# filters, separate filters using :, e.g. --filter TXT:DOC.
+# Filters:
+# TXT = Whitelists plain-text files
+# DOC = Whitelists document files
+# IMG = Whitelists image files
+# VID = Whitelists video files
+# ZIP = Whitelists archive files
+# @returns {list} Searched files / directories.
+#
+search_files() {
+    if is_not_installed "fd"; then
+        return 1
+    fi
+
+    # Filters.
+    FILTERS_PREFIX="$EVUTILS_HOME/lib/filter/search"
+    # Whitelists plain-text files.
+    FILTER_TXT="$FILTERS_PREFIX/plaintext"
+    # Whitelists document files.
+    FILTER_DOC="$FILTERS_PREFIX/documents"
+    # Whitelists image files.
+    FILTER_IMG="$FILTERS_PREFIX/images"
+    # Whitelists video files.
+    FILTER_VID="$FILTERS_PREFIX/videos"
+    # Whitelists archive files.
+    FILTER_ARCHIVE="$FILTERS_PREFIX/archives"
+
+    dirs=""
+    fd_opts=""
+
+    while [ "$1" ]; do
+        case $1 in
+            -h|--hidden)
+                fd_opts="${fd_opts} -H"
+                ;;
+            -n|--non-recursive)
+                fd_opts="${fd_opts} --max-depth 1"
+                ;;
+            -t|--type)
+                IFS=:
+                for _type in $2; do
+                    unset IFS
+                    case $_type in
+                        FILE)
+                            fd_opts="${fd_opts} --type f"
+                            ;;
+                        DIR)
+                            fd_opts="${fd_opts} --type d"
+                            ;;
+                    esac
+                done
+                shift
+                ;;
+            -f|--filter)
+                filters=$2
+                shift
+                ;;
+            -d|--dir)
+                IFS=:
+                for _dir in $2; do
+                    unset IFS
+                    if [ -d "$_dir" ]; then
+                        dirs=$(list_cat "$dirs" "$_dir" ":")
+                    fi
+                done
+                shift
+                ;;
+        esac
+        shift
+    done
+
+    patterns=""
+
+    case $filters in
+        *TXT*)
+            fd_opts="${fd_opts} --ignore-file ${FILTER_TXT}"
+            if ! echo "$filters" | grep -Fq "DOC"; then
+                fd_opts="${fd_opts} $(sed 's/\$//g;s/^\\/-E '\''*/;s/$/'\''/;s/\\//g' "$FILTER_DOC" | tr '\r\n' ' ')"
+                # patterns=$(list_cat "$patterns" "$(sed 's/^/!/' "$FILTER_DOC" | tr '\r\n' '|')" "|")
+            fi
+            if ! echo "$filters" | grep -Fq "IMG"; then
+                fd_opts="${fd_opts} $(sed 's/\$//g;s/^\\/-E '\''*/;s/$/'\''/;s/\\//g' "$FILTER_IMG" | tr '\r\n' ' ')"
+                # patterns=$(list_cat "$patterns" "$(sed 's/^/!/' "$FILTER_IMG" | tr '\r\n' '|')" "|")
+            fi
+            if ! echo "$filters" | grep -Fq "VID"; then
+                fd_opts="${fd_opts} $(sed 's/\$//g;s/^\\/-E '\''*/;s/$/'\''/;s/\\//g' "$FILTER_VID" | tr '\r\n' ' ')"
+                # patterns=$(list_cat "$patterns" "$(sed 's/^/!/' "$FILTER_VID" | tr '\r\n' '|')" "|")
+            fi
+            if ! echo "$filters" | grep -Fq "ZIP"; then
+                fd_opts="${fd_opts} $(sed 's/\$//g;s/^\\/-E '\''*/;s/$/'\''/;s/\\//g' "$FILTER_ARCHIVE" | tr '\r\n' ' ')"
+                # patterns=$(list_cat "$patterns" "$(sed 's/^/!/' "$FILTER_ARCHIVE" | tr '\r\n' '|')" "|")
+            fi
+            ;;
+        *)
+            IFS=:
+            for filter in $filters; do
+                unset IFS
+                case $filter in
+                    DOC)
+                        patterns=$(list_cat "$patterns" "$(tr '\r\n' '|' < "$FILTER_DOC")" "|")
+                        ;;
+                    IMG)
+                        patterns=$(list_cat "$patterns" "$(tr '\r\n' '|' < "$FILTER_IMG")" "|")
+                        ;;
+                    VID)
+                        patterns=$(list_cat "$patterns" "$(tr '\r\n' '|' < "$FILTER_VID")" "|")
+                        ;;
+                    ZIP)
+                        patterns=$(list_cat "$patterns" "$(tr '\r\n' '|' < "$FILTER_ARCHIVE")" "|")
+                        ;;
+                esac
+                patterns=${patterns%|*}
+            done
+            ;;
+    esac
+
+    if [ "$patterns" ]; then
+        IFS=:
+        eval fd "$fd_opts" --regex "'$patterns'" -- $dirs
+        unset IFS
+    else
+        IFS=:
+        eval fd "$fd_opts" . -- $dirs
+        unset IFS
+    fi
+}
+

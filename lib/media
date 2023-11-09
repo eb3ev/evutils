@@ -1,0 +1,188 @@
+#!/bin/sh
+#
+#= Evutils - Media Library
+#
+# Library for controlling media players.
+
+
+
+. "$EVUTILS_HOME/lib/list"
+
+# Get a list of the running media players that can be controlled.
+# @returns {list} The running media players.
+#
+get_running_players() {
+    playerctl -l
+}
+
+# Apply the player control.
+# @param {command} 1 The command to the player.
+# Commands:
+# Pause the players.
+# Play the players.
+# Toggle play of the players.
+# Stop the players.
+# Go to the next track of the players.
+# Go to the previous track of the players.
+# @param {player} 2 The player to control. If unset, then all players are controlled.
+#
+apply_player_control() {
+    control_cmd="playerctl"
+
+    if [ "$2" ]; then
+        control_cmd="${control_cmd} --player='${2}'"
+    else
+        control_cmd="${control_cmd} -a"
+    fi
+
+    case $1 in
+        PAUSE)
+            control_cmd="${control_cmd} pause"
+            ;;
+        PLAY)
+            control_cmd="${control_cmd} play"
+            ;;
+        PLAY_PAUSE)
+            control_cmd="${control_cmd} play-pause"
+            ;;
+        STOP)
+            control_cmd="${control_cmd} stop"
+            ;;
+        NEXT)
+            control_cmd="${control_cmd} next"
+            ;;
+        PREV)
+            control_cmd="${control_cmd} prev"
+            ;;
+    esac
+
+    eval "$control_cmd"
+}
+
+# Control players.
+# @param {player} --player|* The player to control. Pass multiple --player to
+# control multiple players. If no players are passed then all players are controlled.
+# @param -p|--pause Pause the players.
+# @param -r|--play Play the players.
+# @param -t|--toggle|--play-pause Toggle play of the players.
+# @param -s|--stop Stop the players.
+# @param -n|--next Go to the next track of the players.
+# @param -b|--prev|--previous Go to the previous track of the players.
+#
+player_control() {
+    players=""
+    cmd=""
+
+    running_players=$(get_running_players)
+
+    while [ "$1" ]; do
+        case $1 in
+            --player)
+                if echo "$running_players" | grep -Fqx -- "$2"; then
+                    players=$(list_cat "$players" "$2" ":")
+                fi
+                shift
+                ;;
+            -p|--pause)
+                cmd=PAUSE
+                ;;
+            -r|--play)
+                cmd=PLAY
+                ;;
+            -t|--toggle|--play-pause)
+                cmd=PLAY_PAUSE
+                ;;
+            -s|--stop)
+                cmd=STOP
+                ;;
+            -n|--next)
+                cmd=NEXT
+                ;;
+            -b|--prev)
+                cmd=PREV
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -?*)
+                ;;
+            *)
+                if echo "$running_players" | grep -Fqx -- "$1"; then
+                    players=$(list_cat "$players" "$1" ":")
+                fi
+                ;;
+        esac
+        shift
+    done
+
+    while [ "$1" ]; do
+        if echo "$running_players" | grep -Fqx -- "$1"; then
+            players=$(list_cat "$players" "$1" ":")
+        fi
+        shift
+    done
+
+    if ! [ "$cmd" ]; then
+        return
+    fi
+
+    if ! [ "$players" ]; then
+        apply_player_control "$cmd"
+    else
+        IFS=:
+        for player in $players; do
+            unset IFS
+            apply_player_control "$cmd" "$player"
+        done
+    fi
+}
+
+# Pause a media player.
+# @param {player} --player|* The player to pause. Pass multiple --player to
+# pause multiple players. If no players are passed then all players are passed.
+#
+player_pause() {
+    player_control "$@" --pause
+}
+
+# Play a media player.
+# @param {player} --player|* The player to pause. Pass multiple --player to
+# pause multiple players. If no players are passed then all players are passed.
+#
+player_play() {
+    player_control "$@" --play
+}
+
+# Toggle the playing of a media player.
+# @param {player} --player|* The player to pause. Pass multiple --player to
+# pause multiple players. If no players are passed then all players are passed.
+#
+player_toggle() {
+    player_control "$@" --play-pause
+}
+
+# Stop a media player.
+# @param {player} --player|* The player to pause. Pass multiple --player to
+# pause multiple players. If no players are passed then all players are passed.
+#
+player_stop() {
+    player_control "$@" --stop
+}
+
+# Skip to the next track of the media player.
+# @param {player} --player|* The player to pause. Pass multiple --player to
+# pause multiple players. If no players are passed then all players are passed.
+#
+player_next() {
+    player_control "$@" --next
+}
+
+# Go to previous track of the media player.
+# @param {player} --player|* The player to pause. Pass multiple --player to
+# pause multiple players. If no players are passed then all players are passed.
+#
+player_prev() {
+    player_control "$@" --previous
+}
+

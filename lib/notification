@@ -1,0 +1,67 @@
+#!/bin/sh
+#
+#= Evutils - Notification Library
+#
+# Library for handling notifications.
+
+
+
+. "$EVUTILS_HOME/lib/config"
+
+EVUTILS_NOTIFICATION_ID="16$(date '+%Y')"
+
+# Send a notification.
+#
+#
+notification() {
+    if [ "$EVUTILS_NOTIFICATIONS" -eq 1 ] || ! [ "$DISPLAY" ]; then
+        return
+    fi
+
+    if [ -t 0 ] || [ -p /dev/stdin ]; then
+        return
+    fi
+
+    summary=""
+    body=""
+
+    while [ "$1" ]; do
+        case $1 in
+            -s|--sum|--summary)
+                summary=$2
+                shift
+                ;;
+            -b|--body)
+                body=$2
+                shift
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -?*)
+                ;;
+            *)
+                if ! [ "$summary" ]; then
+                    summary=$1
+                else
+                    body=$1
+                fi
+                ;;
+        esac
+
+        shift
+    done
+
+    while [ "$1" ]; do
+        if ! [ "$summary" ]; then
+            summary=$1
+        else
+            body=$1
+        fi
+        shift
+    done
+
+    notify-send --replace-id="$EVUTILS_NOTIFICATION_ID" "$summary" "$body"
+}
+

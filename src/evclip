@@ -1,0 +1,112 @@
+#!/bin/sh
+#
+#= Evutils - Evclip
+#
+# Copy to clipboard.
+#
+#
+#== Synopsis
+#
+# evclip [options] --string string ...
+# evclip [options] string ...
+# evclip [options] -- string ...
+#
+#
+#== Options
+#
+# -t string, --string string, --text string
+#    The string to put into clipboard. Passing multiple --string will concatenate
+#    each string with a new line character.
+#
+# -f /path/to/file, --file /path/to/file
+#    Copy absoulte path of file to clipboard. If --string options are passed
+#    this will be concatenated at the end before --cwd.
+#
+# -d, --cwd
+#    Copy current working directory to clipboard. If --string options are passed
+#    this will be concatenated at the end.
+#
+# -p, --primary
+#    Use XA_PRIMARY X selection instead. XA_CLIPBOARD is used by default.
+#
+# -s, --secondary
+#    Use XA_SECONDARY X selection instead. XA_CLIPBOARD is used by default.
+
+
+
+. "$EVUTILS_HOME/lib/log"
+. "$EVUTILS_HOME/lib/clipboard"
+. "$EVUTILS_HOME/lib/list"
+
+_string=""
+_files=""
+_pwd=1
+_selection_opt=""
+
+# Set clipboard.
+#
+_run() {
+    if [ "$_files" ]; then
+        _string=$(list_cat "$_string" "$_files")
+    fi
+    if [ "$_pwd" -eq 0 ]; then
+        _string=$(list_cat "$_string" "$(pwd)")
+    fi
+    if ! [ "$_string" ]; then
+        exit
+    fi
+    if [ "$_selection_opt" ]; then
+        set_clipboard "$_selection_opt" -- "$_string"
+    else
+        set_clipboard -- "$_string"
+    fi
+}
+
+main() {
+    while [ "$1" ]; do
+        case $1 in
+            -t|--string|--text)
+                _string=$(list_cat "$_string" "$2")
+                shift
+                ;;
+            -f|--file)
+                if [ -e "$2" ]; then
+                    _files=$(list_cat "$_files" "$(readlink -f "$2")")
+                else
+                    log_warning "${2} doesn't exist. Ignoring..."
+                fi
+                shift
+                ;;
+            -d|--cwd)
+                _pwd=0
+                ;;
+            -p|--primary)
+                _selection_opt="--primary"
+                ;;
+            -s|--secondary)
+                _selection_opt="--secondary"
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -?*)
+                log_warning "Unknown option ${1}. Ignoring..."
+                ;;
+            *)
+                _string=$(list_cat "$_string" "$1")
+                ;;
+        esac
+        shift
+    done
+    
+    while [ "$1" ]; do
+        _string=$(list_cat "$_string" "$1")
+        shift
+    done
+
+    _run
+}
+
+main "$@"
+

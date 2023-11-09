@@ -1,0 +1,69 @@
+#!/bin/sh
+#
+#= Evutils - Audio Library
+#
+# Library for handling audio devices.
+
+
+
+. "$EVUTILS_HOME/lib/std"
+. "$EVUTILS_HOME/lib/list"
+ 
+# Gets all available audio sinks.
+# @returns {list} The list of all audio sinks in the form of sink_id,sink_description
+#
+get_sinks() {
+    sink_list=""
+
+    curr_sink=""
+    IFS=$CHAR_NL
+    for line in $(pactl list sinks); do
+        unset IFS
+        case $line in
+            "Sink #"*)
+                if [ "$curr_sink" ]; then
+                    sink_list=$(list_cat "$sink_list" "$curr_sink")
+                    unset curr_sink
+                fi
+                ;;
+            *"Name: "*)
+                curr_sink="${line##*: }"
+                ;;
+            *"Description: "*)
+                curr_sink="${curr_sink},${line##*: }"
+                ;;
+        esac
+    done
+
+    if [ "$curr_sink" ]; then
+        sink_list=$(list_cat "$sink_list" "$curr_sink")
+        unset curr_sink
+    fi
+
+    echo "$sink_list"
+}
+
+# Get the ID of the default sink being used.
+# @returns {string} The ID of the default sink.
+#
+get_def_sink() {
+    pactl info | awk -F ": " '/Default Sink: / {print $2}'
+}
+
+# Like get_sinks but without the default sink being used.
+# @returns {list} The list of all audio sinks in the form of sink_id,sink_description
+# excluding the default sink.
+#
+get_alt_sinks() {
+    all_sinks=$(get_sinks)
+    def_sink_id=$(get_def_sink)
+    list_rm --key "$def_sink_id" --delim "," --list "$all_sinks"
+}
+
+# Set the default sink to use.
+# @param {string} 1 The ID of the sink to set.
+#
+set_def_sink() {
+    pactl set-default-sink "$1"
+}
+

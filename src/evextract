@@ -1,0 +1,259 @@
+#!/bin/sh
+#
+#= Evutils - Evextract
+#
+# Extract archive files.
+#
+#
+#== Synopsis
+#
+# evextract [options] --file /path/to/file ...
+# evextract [options] /path/to/file ...
+# evextract [options] -- /path/to/file ...
+# evextract [options] --dir /dir/path
+# evextract [options] /dir1/path:/dir2/path
+# evextract [options] -- /dir/path ...
+#
+#
+#== Options
+#
+# -f /path/to/file, --file /path/to/file
+#    The archive file to extract. Pass multiple --file to extract multiple files.
+#    If unset, search for files using evmenu in the set --dir or current working
+#    directory.
+#
+# -d /dir/path, --dir /dir/path
+#    The directories to search for files if --file is unset. To search for multiple
+#    directories, separate directory paths with :, e.g. /dir1/path:/dir2/path, or
+#    pass multiple --dir.
+# 
+# -t /dir/path, --dir /dir/path, --target /dir/path, --target-dir /dir/path
+#    The directory to extract to, otherwise, it will extract contents to current
+#    working directory.
+
+
+
+. "$EVUTILS_HOME/lib/log"
+. "$EVUTILS_HOME/lib/file"
+. "$EVUTILS_HOME/lib/list"
+
+_files=""
+_dirs=""
+_target_dir=""
+
+_evmenu_opts=""
+
+# Search for files to extract.
+# @returns {path} Path to file.
+#
+_search_dirs() {
+    evsearch_opts="${_evmenu_opts} --fuzzy --hidden --type FILE --filter ZIP --prompt 'Extract'"
+    IFS=:
+    eval evsearch "$evsearch_opts" -- $_dirs
+    unset IFS
+}
+
+# Get the file to extract from searches.
+#
+_set_file() {
+    selection=""
+
+    if ! { [ -t 0 ] || [ -p /dev/stdin ]; }; then
+        _evmenu_opts="${_evmenu_opts} --gui"
+    elif ! echo "$_evmenu_opts" | grep -Fq -- "--gui"; then
+        _evmenu_opts="${_evmenu_opts} --term"
+    fi
+
+    selection=$(_search_dirs) 
+
+    if ! [ "$selection" ]; then
+        exit
+    fi
+
+    _files=$(readlink -f "$selection")
+
+    if ! [ -f "$selection" ]; then
+        log_error "Invalid file -- ${_files}. Exiting..."
+        exit 1
+    fi
+}
+
+# Extract the files.
+#
+_run() {
+    IFS=:
+    for file in $_files; do
+        unset IFS
+        if [ "$_target_dir" ]; then
+            log_status "Extracting ${file} to ${_target_dir}..."
+        else
+            log_status "Extracting ${file}..."
+        fi
+        case $file in
+            *.tar|*.tar.xz)
+                if [ "$_target_dir" ]; then
+                    { tar xf "$file" -C "$_target_dir" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
+                else
+                    { tar xf "$file" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
+                fi
+                ;;
+            *.tar.bz2|*.bz2|*.tbz2)
+                if [ "$_target_dir" ]; then
+                    { tar xjf "$file" -C "$_target_dir" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
+                else
+                    { tar xjf "$file" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
+                fi
+                ;;
+            *.tar.gz|*.tgz)
+                if [ "$_target_dir" ]; then
+                    { tar xzf "$file" -C "$_target_dir" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
+                else
+                    { tar xzf "$file" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
+                fi
+                ;;
+            *.rar)
+                if [ "$_target_dir" ]; then
+                    { unrar x "$file" "$_target_dir" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
+                else
+                    { unrar x "$file" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
+                fi
+                ;;
+            *.gz)
+                { gzip "$file" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
+                ;;
+            *.zip)
+                if [ "$_target_dir" ]; then
+                    { unzip "$file" -d "$_target_dir" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
+                else
+                    { unzip "$file" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
+                fi
+                ;;
+            *.Z)
+                { uncompress "$file" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
+                ;;
+            *.7z)
+                if [ "$_target_dir" ]; then
+                    { 7z x "$file" -o "$_target_dir" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
+                else
+                    { 7z x "$file" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
+                fi
+                ;;
+            *.deb)
+                if [ "$_target_dir" ]; then
+                    { ar x --output "$_target_dir" "$file" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
+                else
+                    { ar x "$file" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
+                fi
+                ;;
+            *.tar.zst)
+                if [ "$_target_dir" ]; then
+                    { unzstd --output-dir-flat "$_target_dir" "$file" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
+                else
+                    { unzstd "$file" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
+                fi
+                ;;      
+        esac
+    done
+}
+
+main() {
+    while [ "$1" ]; do
+        case $1 in
+            -f|--file)
+                if [ -f "$2" ]; then
+                    if ! is_archive_file "$2"; then
+                        log_warning "${2} is not an archive file. Ignoring..."
+                    else
+                        _files=$(list_cat "$_files" "$2" ":")
+                    fi
+                else
+                    log_warning "Invalid file ${2}. Ignoring..."
+                fi
+                shift
+                ;;
+            -d|--dirs)
+                IFS=:
+                for dir in $2; do
+                    unset IFS
+                    if [ -d "$dir" ]; then
+                        _dirs=$(list_cat "$_dirs" "$dir" ":")
+                    else
+                        log_warning "Invalid directory ${2}. Ignoring..."
+                    fi
+                done
+                shift
+                ;;
+            -t|--target|--target-dir)
+                if [ -e "$2" ]; then
+                    log_error "Cannot use target directory path. ${2} in already in use. Exiting..."
+                    exit 1
+                elif ! is_valid_path "$2"; then
+                    log_error "Invalid target directory path ${2}. Exiting..."
+                    exit 1
+                else
+                    mkdir -p "$2" || { log_error "Create target directory failed. Exiting..." && exit 1; }
+                    _target_dir=$2
+                fi
+                shift
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -?*)
+                log_warning "Unknown option ${1}. Ignoring..."
+                ;;
+            *)
+                if [ -f "$1" ]; then
+                    if ! is_archive_file "$1"; then
+                        log_warning "${1} is not an archive file. Ignoring..."
+                    else
+                        _files=$(list_cat "$_files" "$1" ":")
+                    fi
+                else
+                    IFS=:
+                    for dir in $1; do
+                        unset IFS
+                        if [ -d "$dir" ]; then
+                            _dirs=$(list_cat "$_dirs" "$dir" ":")
+                        else
+                            log_warning "Invalid file/directory ${dir}. Ignoring..."
+                        fi
+                    done
+                fi
+                ;;
+        esac
+
+        shift
+    done
+
+    while [ "$1" ]; do
+        if [ -f "$1" ]; then
+            if ! is_archive_file "$1"; then
+                log_warning "${1} is not an archive file. Ignoring..."
+            else
+                _files=$(list_cat "$_files" "$1" ":")
+            fi
+        else
+            IFS=:
+            for dir in $1; do
+                unset IFS
+                if [ -d "$dir" ]; then
+                    _dirs=$(list_cat "$_dirs" "$dir" ":")
+                else
+                    log_warning "Invalid file/directory ${dir}. Ignoring..."
+                fi
+            done
+        fi
+        shift
+    done
+
+    if ! [ "$_files" ]; then
+        _set_file
+    fi
+
+    _run
+}
+
+main "$@"
+

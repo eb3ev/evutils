@@ -1,0 +1,90 @@
+#!/bin/sh
+#
+#= Evuitls - Encoder Library
+#
+# Library for encoding strings in a usable state.
+
+
+
+# Encode a string.
+# @param {encoder} -e|--enc The encoder to use.
+# Encoders:
+# AWK_REGEX Encode string to for awk's regex syntax.
+# SED_REGEX Encode string to for sed's regex syntax.
+# URL Encode string to for sed's regex syntax.
+# @param {string} -s|--string|* The string to encode. If unset, stdin is used.
+# @returns {string} Encoded string.
+#
+encode() {
+    # Encoders.
+    # Awk regex encoder.
+    ENCODER_AWK_REGEX="$EVUTILS_HOME/lib/encoder/enc-awk-regex.sed"
+    # Sed regex encoder.
+    ENCODER_SED_REGEX="$EVUTILS_HOME/lib/encoder/enc-sed-regex.sed"
+    # URL encoder.
+    ENCODER_URL="$EVUTILS_HOME/lib/encoder/enc-url.sed"
+
+    stdin=0
+    encoder=""
+    input=""
+
+    while [ "$1" ]; do
+        case "$1" in
+            -e|--enc)
+                encoder=$2
+                shift
+                ;;
+            -s|--string)
+                input=$2
+                stdin=1
+                shift
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -?*)
+                ;;
+            *)
+                input=$1
+                stdin=1
+                ;;
+        esac
+
+        shift
+    done
+
+    while [ "$1" ]; do
+        input=$1
+        stdin=1
+        shift
+    done
+
+    if [ "$stdin" -eq 1 ]; then
+        echo "$input" | encode --enc "$encoder"
+    else
+        case $encoder in
+            AWK_REGEX)
+                "$ENCODER_AWK_REGEX"
+                ;;
+            SED_REGEX)
+                "$ENCODER_SED_REGEX"
+                ;;
+            URL)
+                "$ENCODER_URL"
+                ;;
+            *)
+                cat
+                ;;
+        esac
+    fi
+}
+
+# Remove surrounding quotes from a string.
+# @param {string} 1 The string.
+# @returns {string} New string with the surrounding quotes removed.
+#
+rm_surround_quotes() {
+    echo "$1" | sed "s/^[\"']//;s/[\"']$//"
+}
+

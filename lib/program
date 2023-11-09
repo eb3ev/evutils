@@ -1,0 +1,102 @@
+#!/bin/sh
+#
+#= Evutils - Programs Library
+#
+# Library to query programs.
+
+
+
+. "$EVUTILS_HOME/lib/cache"
+. "$EVUTILS_HOME/lib/list"
+
+# Programs binaries that are viable as desktop applications.
+EVUTILS_DATA_DESKTOP_APPLICATIONS="$EVUTILS_HOME/lib/data/desktop-applications"
+
+# Returns true if the program is installed.
+# @param {program} 1 The program to check.
+# @returns {bool} True if the program installed and false otherwise.
+#
+is_installed() {
+    if command -v "$1" >/dev/null 2>&1; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Returns true if the program is not installed.
+# @param {program} 1 The program to check.
+# @returns {bool} True if program is not installed and false otherwise.
+#
+is_not_installed() {
+    if command -v "$1" >/dev/null 2>&1; then
+        return 1
+    else
+        return 0
+    fi
+}
+
+# Sync / update the $EVUTILS_PROGRAM_CACHE of installed binaries in $PATH.
+#
+sync_program_cache() {
+    create_cache_dir
+    IFS=:
+    if stest -dqr -n "$EVUTILS_PROGRAM_CACHE" $PATH 2>/dev/null; then
+        stest -flx $PATH | sort -u > "$EVUTILS_PROGRAM_CACHE"
+    fi
+    unset IFS
+}
+
+# Get only the programs that are viable as desktop applications.
+# @returns {list} Desktop applications binaries.
+#
+get_desktop_applications() {
+    sync_program_cache
+    grep -Fx -f "$EVUTILS_DATA_DESKTOP_APPLICATIONS" "$EVUTILS_PROGRAM_CACHE"
+}
+
+# Get executables from directories.
+# @param {path} --dir Directory to search in.
+# @returns {list} List of executables inside the directories. These only returns
+# the base name of the executables and not their absolute paths.
+#
+get_programs_from_directories() {
+    dirs=""
+
+    while [ "$1" ]; do
+        case $1 in
+            --dir)
+                if [ -d "$2" ]; then
+                    dirs=$(list_cat "$dirs" "$2" ":")
+                fi
+                shift
+                ;;
+        esac
+
+        shift
+    done
+
+    IFS=:
+    stest -flx $dirs | sort -u
+    unset IFS
+}
+
+# Gets all available man pages.
+# @returns {list} Man pages.
+#
+get_man_pages() {
+    man -k . | awk '{print $1}'
+}
+
+# Returns true if it is a valid man page and false otherwise.
+# @param {string} 1 Man page
+# @returns {bool} True if it is a valid man page and false otherwise.
+#
+is_man_page() {
+    if get_man_pages | grep -Fqx -- "$1"; then
+        return 0
+    else
+        return 1
+    fi
+}
+

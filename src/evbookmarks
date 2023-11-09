@@ -1,0 +1,188 @@
+#!/bin/sh
+#
+#= Evutils - Evbookmarks
+#
+# Select bookmarked URLs from a bookmark file using evmenu and open using
+# evbrowser.
+#
+#
+#== Synopsis
+#
+# evbookmarks [options]
+#
+#
+#== Options
+#
+# -c, --copy
+#    Copy the bookmark URL to clipboard instead of opening in a browser.
+#
+# -h, --use-history
+#    Recently opened bookmarks will be shown on top of the list.
+#
+# -p prompt, --prompt prompt
+#    Use a different prompt for evmenu. Default is "Open".
+#
+# -b browser-name, --browser browser-name
+#    Override the browser set in configuration to use. Available values found in
+#    $EVUTILS_HOME/lib/data/browsers.
+#   
+# --browser-opts browser-options
+#    Additional browser options to add for the set browser.
+#
+# -a, --alt
+#    If there are other available installed browsers in the system that isn't
+#    already the set browser, Prompt using evmenu to select and use an alternative
+#    browser.
+#
+# --new-tab
+#    Open bookmark URL in a new tab. This is the default behaviour.
+#
+# --new-win, --new-window
+#    Open bookmark URL in a new window.
+#
+# -d, --dry-run
+#    Print the computed command instead of running it.
+
+
+
+. "$EVUTILS_HOME/lib/log"
+. "$EVUTILS_HOME/lib/list"
+. "$EVUTILS_HOME/lib/list"
+. "$EVUTILS_HOME/lib/clipboard"
+. "$EVUTILS_HOME/lib/cache"
+. "$EVUTILS_HOME/lib/config"
+
+_copy_url=1
+_use_history=1
+_prompt="Open"
+_dry_run=1
+
+_evbrowser_opts=""
+
+# Checks if bookmarks file exists and is valid.
+#
+_check_bookmarks() {
+    if ! [ "$EVUTILS_BOOKMARKS" ]; then
+        log_error "bookmarks unset in configuration file."
+        exit 1
+    elif ! [ -r "$EVUTILS_BOOKMARKS" ]; then
+        log_error "Invalid bookmarks file - $EVUTILS_BOOKMARKS."
+        exit 1
+    fi
+}
+
+# Get the bookmarks
+# @returns {list} Bookmark names / keys.
+#
+_get_bookmarks() {
+    bookmarks=$(get_keys --file "$EVUTILS_BOOKMARKS")
+
+    if [ "$_use_history" -eq 0 ]; then
+        if ! [ -e "$EVBOOKMARKS_HISTFILE" ]; then
+            create_cache_dir
+            get_keys --file "$EVUTILS_BOOKMARKS" > "$EVBOOKMARKS_HISTFILE"
+        fi
+
+        sync_list_with_list "$EVBOOKMARKS_HISTFILE" "$bookmarks"
+
+        bookmarks=$(cat "$EVBOOKMARKS_HISTFILE")
+    fi
+
+    echo "$bookmarks"
+}
+
+# Prompt user for a bookmark to open.
+# @returns {string} Bookmark name / key.
+#
+_get_bookmark() {
+    if ! { [ -t 0 ] || [ -p /dev/stdin ]; }; then
+        _get_bookmarks | evmenu --gui --prompt "$_prompt"
+    else
+        _get_bookmarks | evmenu --term --prompt "$_prompt"
+    fi
+}
+
+# Get the bookmark URL.
+# @param {string} Bookmark name / key.
+# @returns {string} The URL(s) of the bookmark.
+#
+_get_bookmark_urls() {
+    get_val --key "$1" --idx 2 --file "$EVUTILS_BOOKMARKS"
+}
+
+# Open bookmark in evbrowser.
+#
+_run() {
+    bookmark=$(_get_bookmark)
+    if ! [ "$bookmark" ]; then
+        exit
+    fi
+
+    bookmark_urls=$(_get_bookmark_urls "$bookmark")
+
+    if [ "$_dry_run" -eq 0 ]; then
+        if [ "$_copy_url" -eq 0 ]; then
+            eval echo "set_clipboard -- ${bookmark_urls}"
+        else
+            eval echo "evbrowser ${_evbrowser_opts} -- ${bookmark_urls}"
+        fi
+    else
+        if [ "$_use_history" -eq 0 ]; then
+            move_to_top --file "$EVBOOKMARKS_HISTFILE" -- "$bookmark"
+        fi
+        if [ "$_copy_url" -eq 0 ]; then
+            eval set_clipboard -- "$bookmark_urls"
+        else
+            eval evbrowser "$_evbrowser_opts" -- "$bookmark_urls"
+        fi
+    fi
+}
+
+main() {
+    _check_bookmarks
+
+    while [ "$1" ]; do
+        case $1 in
+            -c|--copy)
+                _copy_url=0
+                ;;
+            -h|--use-history)
+                _use_history=0
+                ;;
+            -p|--prompt)
+                _prompt=$2
+                shift
+                ;;
+            -d|--dry-run)
+                _dry_run=0
+                ;;
+            -b|--browser)
+                _evbrowser_opts="${_evbrowser_opts} --browser '${2}'"
+                shift
+                ;;
+            --browser-opts)
+                _evbrowser_opts="${_evbrowser_opts} --browser-opts '${2}'"
+                shift
+                ;;
+            -a|--alt)
+                _evbrowser_opts="${_evbrowser_opts} --alt"
+                ;;
+            --new-tab)
+                _evbrowser_opts="${_evbrowser_opts} --new-tab"
+                ;;
+            --new-win|--new-window)
+                _evbrowser_opts="${_evbrowser_opts} --new-win"
+                ;;
+            -?*)
+                log_warning "Unknown option ${1}. Ignoring..."
+                ;;
+        esac
+
+        shift
+    done
+
+    _run
+}
+
+main "$@"
+
