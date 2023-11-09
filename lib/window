@@ -16,6 +16,9 @@
 #
 get_windows() {
     win_list=$(wmctrl -l -p)
+    if ! [ "$win_list" ]; then
+        return
+    fi
     win_ids=$(echo "$win_list" | awk '{print $1}')
     desktop_ids=$(echo "$win_list" | awk '{print $2}')
     win_pids=$(echo "$win_list" | awk '{print $3}')
