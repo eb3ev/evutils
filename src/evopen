@@ -245,7 +245,7 @@ _set_program_cmd() {
                         if [ "$_open_new_term" -eq 0 ]; then
                             _program_cmd="${_win_swallower} ${_program_cmd}"
                         else
-                            log_warning "Ignoring window swallowing -- running application in terminal. Skipping..."
+                            log_warning "Running application in terminal. Ignoring window swallowing..."
                         fi
                         ;;
                     *)
