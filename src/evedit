@@ -177,21 +177,19 @@ _set_editor_cmd() {
         fi
     fi
 
-    _sudo_cmd=""
-
     if [ "$_require_root" -eq 0 ]; then
         if [ "$DISPLAY" ]; then
             if ! { [ -t 0 ] || [ -p /dev/stdin ]; }; then
-                _sudo_cmd="SUDO_ASKPASS=$(which evpass) sudo -A "
+                _editor="SUDO_ASKPASS=$(which evpass) SUDO_EDITOR='${_editor}' sudoedit"
             else
-                _sudo_cmd="sudo "
+                _editor="SUDO_EDITOR='${_editor}' sudoedit"
             fi
         else
-            _sudo_cmd="sudo "
+            _editor="SUDO_EDITOR='${_editor}' sudoedit"
         fi
     fi
 
-    _editor_cmd="${_sudo_cmd}${_editor} '${_file}'"
+    _editor_cmd="${_editor} '${_file}'"
 
     if ! { [ -t 0 ] || [ -p /dev/stdin ]; }; then
         _open_new_term=0
