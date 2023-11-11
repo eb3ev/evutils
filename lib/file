@@ -113,7 +113,7 @@ is_video_file() {
 #
 is_audio_file() {
     case $(get_mime_type "$1") in
-        video/*)
+        audio/*)
             return 0
             ;;
     esac
