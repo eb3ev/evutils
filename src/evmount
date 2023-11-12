@@ -1,0 +1,201 @@
+#!/bin/sh
+#
+#= Evutils - Evmount
+#
+# Mount and unmount removable devices.
+#
+#
+#== Synopis
+#
+# evmount [options]
+# evmount [options] --unmount
+#
+#
+#== Options
+#
+# -u, --unount
+#    Unmount the device instead of mounting it.
+#
+# -l, --list
+#    Show a list of mounted or mountable devices instead of mounting or unmounting
+#    anything.
+#
+# -y, -c, --copy
+#    Copy the path of where the devices are mounted to. If multiple devices were
+#    mounted, the path's will be separated with new line characters.
+#
+# -f, --fm, --evfm
+#    Open evfm to the directory the device was mounted in.
+
+
+. "$EVUTILS_HOME/lib/log"
+. "$EVUTILS_HOME/lib/mount"
+. "$EVUTILS_HOME/lib/list"
+. "$EVUTILS_HOME/lib/clipboard"
+
+_action=MOUNT
+_show_list=1
+_copy=1
+_cd=1
+_open_evfm=1
+
+_dev=""
+_dev_description=""
+_dev_type=""
+_dev_mount_pt=""
+
+# Set the device to mount or unmount.
+#
+_set_dev() {
+    evmenu_opts=""
+    selection=""
+
+    if ! { [ -t 0 ] || [ -p /dev/stdin ]; }; then
+        evmenu_opts="--gui"
+    else
+        evmenu_opts="--term"
+    fi
+
+    devs=""
+
+    case $_action in
+        MOUNT)
+            devs=$(get_all_mountable_removable_devs)
+            if ! [ "$devs" ]; then
+                log_status "No removable devices to mount. Exiting..."
+                exit
+            fi
+            selection=$(get_keys --delim " , " --list "$devs" | eval evmenu "$evmenu_opts" --prompt "'Mount'")
+            ;;
+        UNMOUNT)
+            devs=$(get_all_unmountable_removable_devs)
+            if ! [ "$devs" ]; then
+                log_status "No removable devices to unmount. Exiting..."
+                exit
+            fi
+            selection=$(get_keys --delim " , " --list "$devs" | eval evmenu "$evmenu_opts" --prompt "'Unmount'")
+            ;;
+    esac
+
+    if ! [ "$selection" ]; then
+        exit
+    fi
+
+    _dev=$(get_val --key "$selection" --idx 3 --delim " , " --list "$devs")
+    _dev_description=$selection
+    _dev_type=$(get_val --key "$selection" --idx 2 --delim " , " --list "$devs")
+    _dev_mount_pt=$(get_val --key "$selection" --idx 4 --delim " , " --list "$devs")
+}
+
+# Mount the device.
+#
+_mount_dev() {
+    mount_pt=""
+    case $_dev_type in
+        USB)
+            output=$(mktemp)
+            udisksctl mount -b "$_dev" >"$output" 2>/dev/null \
+                || { log_erorr "Mounting ${_dev_description} failed. Exiting..." && rm -f -- "$output" && exit 1; }
+            mount_pt=$(awk '{print $4}' "$output")
+            rm -f "$output"
+            ;;
+        ANDROID)
+            ;;
+    esac
+
+    log_status "${_dev_description} mounted to ${mount_pt}"
+
+    if [ "$_copy" -eq 0 ]; then
+        set_clipboard -- "$mount_pt"
+    fi
+
+    if [ "$_open_evfm" -eq 0 ]; then
+        evfm -- "$mount_pt"
+    fi
+}
+
+# Unmount the device.
+#
+_unmount_dev() {
+    case $_dev_type in
+        USB)
+            udisksctl unmount -b "$_dev" >/dev/null 2>&1 \
+                || { log_error "Unmounting ${_dev_description} failed. Exiting..." && exit 1; }
+            ;;
+        ANDROID)
+            ;;
+    esac
+
+    log_status "Unmounted ${_dev_description} from ${_dev_mount_pt}"
+}
+
+# Mount or unmount the device.
+#
+_run() {
+    if [ "$_show_list" -eq 0 ]; then
+        case "$_action" in
+            MOUNT)
+                mountable_devs=$(get_all_mountable_removable_devs) 
+                if [ "$mountable_devs" ]; then
+                    mountable_devs=$(echo "$mountable_devs" | awk -F " , " '{print $2": "$1}')
+                    log_status "$(printf "Mountable Devices:\n%s" "$mountable_devs")"
+                else
+                    log_status "No removable devices to mount."
+                fi
+                ;;
+            UNMOUNT)
+                mounted_devs=$(get_all_unmountable_removable_devs) 
+                if [ "$mounted_devs" ]; then
+                    mounted_devs=$(echo "$mounted_devs" | awk -F " , " '{print $2": "$1" mounted to "$4}')
+                    log_status "$(printf "Mounted Devices:\n%s" "$mounted_devs")"
+                else
+                    log_status "No mounted removable devices"
+                fi
+                ;;
+        esac
+        exit
+    else
+        _set_dev
+        case $_action in
+            MOUNT)
+                _mount_dev
+                ;;
+            UNMOUNT)
+                _unmount_dev
+                ;;
+        esac
+    fi
+}
+
+main() {
+    while [ "$1" ]; do
+        case $1 in
+            -u|--unmount)
+                _action=UNMOUNT
+                ;;
+            -l|--list)
+                _show_list=0
+                ;;
+            -c|-y|--copy)
+                _copy=0
+                ;;
+            -f|--fm|--evfm)
+                _open_evfm=0
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -?*)
+                log_error "Unknown option ${1}. Exiting..."
+                exit 1
+                ;;
+        esac
+        shift
+    done
+
+    _run
+}
+
+main "$@"
+

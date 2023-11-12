@@ -1,0 +1,132 @@
+#!/bin/sh
+#
+#= Evutils - Mount Library
+#
+# Library for mounting and unmounting storage devices.
+
+
+
+. "$EVUTILS_HOME/lib/std"
+. "$EVUTILS_HOME/lib/encode"
+. "$EVUTILS_HOME/lib/list"
+
+# Gets a list of mountable removable devices.
+# @returns {list} Mountable removable devices list in the format of
+# <Device Description> , USB , <Device Name>
+#
+get_mountable_removable_devs() {
+    dev_info=$(lsblk -APpo NAME,LABEL,SIZE,RM,TYPE,MOUNTPOINT \
+        | awk -F '"' '$8=="1" && $10=="part" && $12=="" {print $2" , "$4" , "$6}')
+    if ! [ "$dev_info" ]; then
+        return
+    fi
+    dev_vendor_info=$(lsblk -APpo NAME,MODEL,RM,TYPE,MOUNTPOINT \
+        | awk -F '"' '$6=="1" && $8=="disk" && $10=="" {print $2" , "$4}')
+
+    IFS=$CHAR_NL
+    for dev_name in $(get_keys --delim " , " --list "$dev_info"); do
+        unset IFS
+        dev_base_name=${dev_name%[0-9]*}
+        vendor_info=$(get_val --key "$dev_base_name" --idx 2 --delim " , " --list "$dev_vendor_info")
+        if [ "$(get_val --key "$dev_name" --idx 2 --delim " , " --list "$dev_info")" ]; then
+            dev_info=$(echo "$dev_info" | sed "s/$(encode --enc SED_REGEX -- "$dev_name")[0-9]* , /\0${vendor_info} /")
+        else
+            dev_info=$(echo "$dev_info" | sed "s/$(encode --enc SED_REGEX -- "$dev_name")[0-9]* , /\0${vendor_info}/")
+        fi
+        unset dev_name
+        unset vendor_info
+    done 
+
+    dev_info=$(echo "$dev_info" | awk -F " , " '{print "["$3"] "$1" - "$2" , USB , "$1}')
+
+    echo "$dev_info"
+}
+
+# Gets a list of unmountable removable devices.
+# @returns {list} Unmountable removable devices list in the format of
+# <Device Description> , USB , <Device Name> , <Mount Point>
+#
+get_unmountable_removable_devs() {
+    dev_info=$(lsblk -APpo NAME,LABEL,SIZE,RM,TYPE,MOUNTPOINT \
+        | awk -F '"' '$8=="1" && $10=="part" && $12!="" {print $2" , "$4" , "$6" , "$12}')
+    if ! [ "$dev_info" ]; then
+        return
+    fi
+    dev_vendor_info=$(lsblk -APpo NAME,MODEL,RM,TYPE,MOUNTPOINT \
+        | awk -F '"' '$6=="1" && $8=="disk" && $10=="" {print $2" , "$4}')
+
+    IFS=$CHAR_NL
+    for dev_name in $(get_keys --delim " , " --list "$dev_info"); do
+        unset IFS
+        dev_base_name=${dev_name%[0-9]*}
+        vendor_info=$(get_val --key "$dev_base_name" --idx 2 --delim " , " --list "$dev_vendor_info")
+        if [ "$(get_val --key "$dev_name" --idx 2 --delim " , " --list "$dev_info")" ]; then
+            dev_info=$(echo "$dev_info" | sed "s/$(encode --enc SED_REGEX -- "$dev_name")[0-9]* , /\0${vendor_info} /")
+        else
+            dev_info=$(echo "$dev_info" | sed "s/$(encode --enc SED_REGEX -- "$dev_name")[0-9]* , /\0${vendor_info}/")
+        fi
+        unset dev_name
+        unset vendor_info
+    done 
+
+    dev_info=$(echo "$dev_info" | awk -F " , " '{print "["$3"] "$1" - "$2" , USB , "$1" , "$4}')
+
+    echo "$dev_info"
+}
+
+# Gets a list of mountable android devices.
+# @returns {list} Mountable android devices list in the format of
+# <Device Description> , ANDROID , <Device Name>
+#
+get_mountable_android_devs() {
+    android_dev_list=""
+    echo "$android_dev_list"
+}
+
+# Gets a list of unmountable android devices.
+# @returns {list} Unmountable android devices list in the format of
+# <Device Description> , ANDROID , <Device Name> , <Mount Point>
+#
+get_unmountable_android_devs() {
+    android_dev_list=""
+    echo "$android_dev_list"
+}
+
+# Gets a list of all mountable removable devices.
+# storage devices, android devices, etc.
+# @returns {list} Mountable removable devices list in the format of
+# <Device Description> , <Device Type> , <Device Name>
+#
+get_all_mountable_removable_devs() {
+    dev_list=""
+    usb_devs=$(get_mountable_removable_devs)
+    if [ "$usb_devs" ]; then
+        dev_list=$(list_cat "$dev_list" "$usb_devs")
+    fi
+    android_devs=$(get_mountable_android_devs)
+    if [ "$android_devs" ]; then
+        dev_list=$(list_cat "$dev_list" "$android_devs")
+    fi
+
+    echo "$dev_list"
+}
+
+# Gets a list of all unmountable removable devices. This includes USB
+# storage devices, android devices, etc.
+# @returns {list} Unmountable removable devices list in the format of
+# <Device Description> , <Device Type> , <Device Name> , <Mount Point>
+#
+get_all_unmountable_removable_devs() {
+    dev_list=""
+    usb_devs=$(get_unmountable_removable_devs)
+    if [ "$usb_devs" ]; then
+        dev_list=$(list_cat "$dev_list" "$usb_devs")
+    fi
+    android_devs=$(get_unmountable_android_devs)
+    if [ "$android_devs" ]; then
+        dev_list=$(list_cat "$dev_list" "$android_devs")
+    fi
+
+    echo "$dev_list"
+}
+
