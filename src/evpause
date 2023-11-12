@@ -2,22 +2,31 @@
 #
 #= Evutils - Evpause
 #
-# Play / pause media players. If multiple players are running then evmenu is used
-# to select which player to control.
+# Play / pause / stop media players. If multiple players are running then evmenu
+# is used to select which player to control.
 #
 #
 #== Synopsis
 #
-# evpause
+# evpause [options]
+#
+#
+#== Options
+#
+# -s, --stop
+#    Stop the player instead of pausing or playing.
 
-
+   
 
 . "$EVUTILS_HOME/lib/log"
 . "$EVUTILS_HOME/lib/media"
 . "$EVUTILS_HOME/lib/list"
 
-_PLAY_ALL_OPT="  Play All"
-_PAUSE_ALL_OPTS="  Pause All"
+_PLAY_ALL_OPT=" Play All"
+_PAUSE_ALL_OPT=" Pause All"
+_STOP_ALL_OPT=" Stop All"
+
+_stop=1
 
 _player=""
 
@@ -36,13 +45,21 @@ _set_player() {
         return
     fi
 
-    players=$(list_cat "$players" "$_PLAY_ALL_OPT")
-    players=$(list_cat "$players" "$_PAUSE_ALL_OPTS")
+    prompt=""
+
+    if [ "$_stop" -eq 0 ]; then
+        players=$(list_cat "$players" "$_STOP_ALL_OPT")
+        prompt=""
+    else
+        players=$(list_cat "$players" "$_PLAY_ALL_OPT")
+        players=$(list_cat "$players" "$_PAUSE_ALL_OPT")
+        prompt=" "
+    fi
 
     if ! { [ -t 0 ] || [ -p /dev/stdin ]; }; then
-        _player=$(echo "$players" | evmenu --gui --prompt " ")
+        _player=$(echo "$players" | evmenu --gui --prompt "$prompt")
     else
-        _player=$(echo "$players" | evmenu --term --prompt " ")
+        _player=$(echo "$players" | evmenu --term --prompt "$prompt")
     fi
 
     if ! [ "$_player" ]; then
@@ -53,23 +70,45 @@ _set_player() {
 # Control the player.
 #
 _run() {
-    case $_player in
-        "$_PLAY_ALL_OPT")
-            player_play
-            ;;
-        "$_PAUSE_ALL_OPTS")
-            player_pause
-            ;;
-        *)
-            player_toggle "$_player"
-            ;;
-    esac
+    if [ "$_stop" -eq 0 ]; then
+        case $_player in
+            "$_STOP_ALL_OPT")
+                player_stop
+                ;;
+            *)
+                player_stop "$_player"
+        esac
+    else
+        case $_player in
+            "$_PLAY_ALL_OPT")
+                player_play
+                ;;
+            "$_PAUSE_ALL_OPT")
+                player_pause
+                ;;
+            *)
+                player_toggle "$_player"
+                ;;
+        esac
+    fi
 }
 
 main() {
+    while [ "$1" ]; do
+        case $1 in
+            -s|--stop)
+                _stop=0
+                ;;
+            -?*)
+                log_warning "Unknown option ${1}. Ignoring..."
+                ;;
+        esac
+        shift
+    done
+
     _set_player
     _run
 }
 
-main
+main "$@"
 
