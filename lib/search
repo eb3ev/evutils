@@ -28,6 +28,7 @@
 # DOC = Whitelists document files
 # IMG = Whitelists image files
 # VID = Whitelists video files
+# AUD = Whitelists audio files
 # ZIP = Whitelists archive files
 # @returns {list} Searched files / directories.
 #
@@ -46,6 +47,8 @@ search_files() {
     FILTER_IMG="$FILTERS_PREFIX/images"
     # Whitelists video files.
     FILTER_VID="$FILTERS_PREFIX/videos"
+    # Whitelists video files.
+    FILTER_AUD="$FILTERS_PREFIX/audios"
     # Whitelists archive files.
     FILTER_ARCHIVE="$FILTERS_PREFIX/archives"
 
@@ -100,19 +103,18 @@ search_files() {
             fd_opts="${fd_opts} --ignore-file ${FILTER_TXT}"
             if ! echo "$filters" | grep -Fq "DOC"; then
                 fd_opts="${fd_opts} $(sed 's/\$//g;s/^\\/-E '\''*/;s/$/'\''/;s/\\//g' "$FILTER_DOC" | tr '\r\n' ' ')"
-                # patterns=$(list_cat "$patterns" "$(sed 's/^/!/' "$FILTER_DOC" | tr '\r\n' '|')" "|")
             fi
             if ! echo "$filters" | grep -Fq "IMG"; then
                 fd_opts="${fd_opts} $(sed 's/\$//g;s/^\\/-E '\''*/;s/$/'\''/;s/\\//g' "$FILTER_IMG" | tr '\r\n' ' ')"
-                # patterns=$(list_cat "$patterns" "$(sed 's/^/!/' "$FILTER_IMG" | tr '\r\n' '|')" "|")
             fi
             if ! echo "$filters" | grep -Fq "VID"; then
                 fd_opts="${fd_opts} $(sed 's/\$//g;s/^\\/-E '\''*/;s/$/'\''/;s/\\//g' "$FILTER_VID" | tr '\r\n' ' ')"
-                # patterns=$(list_cat "$patterns" "$(sed 's/^/!/' "$FILTER_VID" | tr '\r\n' '|')" "|")
+            fi
+            if ! echo "$filters" | grep -Fq "AUD"; then
+                fd_opts="${fd_opts} $(sed 's/\$//g;s/^\\/-E '\''*/;s/$/'\''/;s/\\//g' "$FILTER_AUD" | tr '\r\n' ' ')"
             fi
             if ! echo "$filters" | grep -Fq "ZIP"; then
                 fd_opts="${fd_opts} $(sed 's/\$//g;s/^\\/-E '\''*/;s/$/'\''/;s/\\//g' "$FILTER_ARCHIVE" | tr '\r\n' ' ')"
-                # patterns=$(list_cat "$patterns" "$(sed 's/^/!/' "$FILTER_ARCHIVE" | tr '\r\n' '|')" "|")
             fi
             ;;
         *)
@@ -128,6 +130,9 @@ search_files() {
                         ;;
                     VID)
                         patterns=$(list_cat "$patterns" "$(tr '\r\n' '|' < "$FILTER_VID")" "|")
+                        ;;
+                    AUD)
+                        patterns=$(list_cat "$patterns" "$(tr '\r\n' '|' < "$FILTER_AUD")" "|")
                         ;;
                     ZIP)
                         patterns=$(list_cat "$patterns" "$(tr '\r\n' '|' < "$FILTER_ARCHIVE")" "|")

@@ -38,6 +38,7 @@
 #    DOC = Whitelists document files
 #    IMG = Whitelists image files
 #    VID = Whitelists video files
+#    AUD = Whitelists audio files
 #    ZIP = Whitelists archive files
 # 
 # --gui

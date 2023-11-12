@@ -711,6 +711,7 @@ get_val() {
 # DOC = Whitelists document files
 # IMG = Whitelists image files
 # VID = Whitelists video files
+# AUD = Whitelists audio files
 # ZIP = Whitelists archive files
 # URL = Whitelists URL strings.
 # @returns {list} Filtered list.
@@ -726,6 +727,8 @@ apply_filter() {
     FILTER_IMG="$FILTERS_PREFIX/images.awk"
     # Whitelists video files.
     FILTER_VID="$FILTERS_PREFIX/videos.awk"
+    # Whitelists video files.
+    FILTER_AUD="$FILTERS_PREFIX/audios.awk"
     # Whitelists archive files.
     FILTER_ARCHIVE="$FILTERS_PREFIX/archives.awk"
     # Whitelists URL strings.
@@ -743,6 +746,9 @@ apply_filter() {
             ;;
         VID)
             "$FILTER_VID"
+            ;;
+        AUD)
+            "$FILTER_AUD"
             ;;
         ZIP)
             "$FILTER_ARCHIVE"
@@ -766,6 +772,7 @@ apply_filter() {
 # DOC = Whitelists document files
 # IMG = Whitelists image files
 # VID = Whitelists video files
+# AUD = Whitelists audio files
 # ZIP = Whitelists archive files
 # URL = Whitelists URL strings.
 # @returns {list} Filtered list.
