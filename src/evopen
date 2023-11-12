@@ -334,7 +334,7 @@ main() {
                 _evfm_opts="${_evfm_opts} --new-term"
                 ;;
             -o|--opts)
-                _program_opts="--term-opts '$2'"
+                _program_opts="'$2'"
                 shift
                 ;;
             --gui-menu)
