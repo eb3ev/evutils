@@ -92,8 +92,8 @@ get_unmountable_android_devs() {
     echo "$android_dev_list"
 }
 
-# Gets a list of all mountable removable devices.
-# storage devices, android devices, etc.
+# Gets a list of all mountable removable devices. This includes USB storage
+# devices, android devices, etc.
 # @returns {list} Mountable removable devices list in the format of
 # <Device Description> , <Device Type> , <Device Name>
 #
@@ -111,8 +111,8 @@ get_all_mountable_removable_devs() {
     echo "$dev_list"
 }
 
-# Gets a list of all unmountable removable devices. This includes USB
-# storage devices, android devices, etc.
+# Gets a list of all unmountable removable devices. This includes USB storage
+# devices, android devices, etc.
 # @returns {list} Unmountable removable devices list in the format of
 # <Device Description> , <Device Type> , <Device Name> , <Mount Point>
 #
