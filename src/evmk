@@ -98,7 +98,7 @@ _set_file() {
             echo "Invalid path ${new_file}"
             continue
         fi
-        if [ -f "$new_file" ]; then
+        if [ -e "$new_file" ]; then
             if [ "$_overwrite" -eq 1 ]; then
                 echo "${new_file} already exists. Pass --force to overwrite existing files. Exiting..."
                 exit
@@ -148,6 +148,8 @@ _run() {
             else
                 log_warning "${file} already exists. Pass --force to overwrite existing files. Skipping..."
             fi
+        elif [ -d "$file" ]; then
+            log_warning "${file} is already a directory. Skipping..."
         else
             _create_new_file "$file"
         fi
@@ -156,6 +158,12 @@ _run() {
     IFS=:
     for dir in $_dirs; do
         unset IFS
+        if [ -f "$dir" ]; then
+            log_error "${dir} is already a file. Skipping..."
+            continue
+        elif [ -d "$dir" ]; then
+            log_status "${dir} already exists. Skipping..."
+        fi
         mkdir -p "$dir" || log_error "Creating directory ${dir} failed. Skipping..."
         log_status "${dir} created."
     done
