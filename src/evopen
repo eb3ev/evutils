@@ -275,6 +275,7 @@ _run() {
         eval echo "$_program_cmd"
     else
         if [ "$_cache" -eq 0 ]; then
+            _file=$(readlink -f "$_file")
             if [ -e "$EVOPEN_HISTFILE" ]; then
                 move_to_top --file "$EVOPEN_HISTFILE" -- "$_file"
             else
