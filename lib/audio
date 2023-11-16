@@ -9,30 +9,50 @@
 . "$EVUTILS_HOME/lib/std"
 . "$EVUTILS_HOME/lib/list"
  
-# Gets all available audio sinks.
-# @returns {list} The list of all audio sinks in the form of sink_id,sink_description
+# Gets a list of all available audio outputs.
+# @returns {list} List of audio outputs in the format of
+# <Audio Output Description> , <Sink ID> , <Port>
 #
-get_sinks() {
+get_outputs() {
     sink_list=""
+    delim=" , "
 
     curr_sink=""
+    curr_sink_id=""
+    curr_sink_description=""
+    ports_found=1
     IFS=$CHAR_NL
     for line in $(pactl list sinks); do
         unset IFS
         case $line in
-            "Sink #"*)
-                if [ "$curr_sink" ]; then
-                    sink_list=$(list_cat "$sink_list" "$curr_sink")
-                    unset curr_sink
-                fi
-                ;;
-            *"Name: "*)
-                curr_sink="${line##*: }"
-                ;;
-            *"Description: "*)
-                curr_sink="${curr_sink},${line##*: }"
+            *"Active Port: "*)
+                ports_found=1
                 ;;
         esac
+        if [ "$ports_found" -eq 0 ]; then
+            port="${line%%:*}"
+            port=$(echo "$port" | sed 's/\s*\[/[/')
+            port_description=$(echo "$port" | sed 's/\[Out\] //')
+            curr_sink=$(list_cat "$curr_sink" "${port_description} - ${curr_sink_description}${delim}${curr_sink_id}${delim}${port}")
+        else
+            case $line in
+                "Sink #"*)
+                    if [ "$curr_sink" ]; then
+                        sink_list=$(list_cat "$sink_list" "$curr_sink")
+                        unset curr_sink
+                    fi
+                    ;;
+                *"Name: "*)
+                    curr_sink_id="${line##*: }"
+                    ;;
+                *"Description: "*)
+                    curr_sink_description="${line##*: }"
+                    ;;
+                *"Ports:"*)
+                    ports_found=0
+                    ;;
+            esac
+        fi
     done
 
     if [ "$curr_sink" ]; then
@@ -43,27 +63,61 @@ get_sinks() {
     echo "$sink_list"
 }
 
-# Get the ID of the default sink being used.
-# @returns {string} The ID of the default sink.
+# Get the ID of the current sink being used.
+# @returns {string} Sink ID.
 #
-get_def_sink() {
-    pactl info | awk -F ": " '/Default Sink: / {print $2}'
+get_curr_sink_id() {
+    pactl get-default-sink 2>/dev/null || return 1
 }
 
-# Like get_sinks but without the default sink being used.
-# @returns {list} The list of all audio sinks in the form of sink_id,sink_description
-# excluding the default sink.
+# Get the ID of the current sink port being used.
+# @returns {string} Port ID.
 #
-get_alt_sinks() {
-    all_sinks=$(get_sinks)
-    def_sink_id=$(get_def_sink)
-    list_rm --key "$def_sink_id" --delim "," --list "$all_sinks"
+get_curr_sink_port_id() {
+    curr_sink_id=$(get_curr_sink_id)
+    sink_found=1
+    IFS=$CHAR_NL
+    for line in $(pactl list sinks); do
+        unset IFS
+        if [ "$sink_found" ]; then
+            case $line in
+                *"Active Port: "*)
+                    echo "${line##*: }"
+                    return
+                    ;;
+            esac
+        fi
+        if echo "$line" | grep -Fq "$curr_sink_id"; then
+            sink_found=0
+        fi
+    done
 }
 
-# Set the default sink to use.
-# @param {string} 1 The ID of the sink to set.
+# Like get_outputs but without the default audio output being used.
+# @returns {list} List of audio outputs in the format of
+# <Audio Output Description> , <Sink ID> , <Port>
 #
-set_def_sink() {
-    pactl set-default-sink "$1"
+get_alt_outputs() {
+    alt_outputs=""
+
+    curr_sink_id=$(get_curr_sink_id)
+    curr_sink_port_id=$(get_curr_sink_port_id)
+    IFS=$CHAR_NL
+    for output in $(get_outputs); do
+        unset IFS
+        if ! echo "$output" | grep -Fq " , ${curr_sink_id} , ${curr_sink_port_id}"; then
+            alt_outputs=$(list_cat "$alt_outputs" "$output")
+        fi
+    done
+
+    echo "$alt_outputs"
+}
+
+# Set the audio output to use.
+# @param {string} 1 Sink ID.
+# @param {string} 2 Port ID.
+#
+set_output() {
+    pactl set-default-sink "$1" && pactl set-sink-port "$1" "$2"
 }
 
