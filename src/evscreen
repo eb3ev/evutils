@@ -176,7 +176,7 @@ _set_preset_setter_opts() {
         exit 1
     fi
 
-    preset_name=$(get_col --idx 2 --list "$screenlayout_presets" | eval evmenu "$_evmenu_opts" --prompt "Screen Layout Presets")
+    preset_name=$(get_col --idx 2 --list "$screenlayout_presets" | eval evmenu "$_evmenu_opts" --prompt "'Screen Layout Presets'")
 
     if ! [ "$preset_name" ]; then
         exit
