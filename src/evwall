@@ -63,20 +63,33 @@ _get_preset_setting_num_screens() {
     echo "$i"
 }
 
-# Updates the wallpaper presets list to match the current screen count.
+# Updates the wallpaper presets list to match the current active screens.
 # @param {list} 1 Wallpaper presets list.
 # @returns {list} New wallpaper presets list.
 #
-_update_presets_to_screen_count() {
+_update_presets_to_active_screens() {
     new_list=""
     screen_count=$(get_active_screen_count)
+    active_screens=$(get_active_screen_names)
 
     IFS=$CHAR_NL
     for preset in $1; do
         unset IFS
         setting_string=$(get_col --list "$preset" --idx 3)
         if [ "$(_get_preset_setting_num_screens "$setting_string")" -eq "$screen_count" ]; then
-            new_list=$(list_cat "$new_list" "$preset")
+            available_preset=0
+            IFS=:
+            for screen_setting in $setting_string; do
+                unset IFS
+                screen_setting=${screen_setting%%;*}
+                if ! echo "$active_screens" | grep -Fqx -e "$screen_setting" && ! [ "$screen_setting" = "Span" ]; then
+                    available_preset=1
+                fi
+                unset screen_setting
+            done
+            if [ "$available_preset" -eq 0 ]; then
+                new_list=$(list_cat "$new_list" "$preset")
+            fi
         elif echo "$setting_string" | grep -q -e "^Span;"; then
             new_list=$(list_cat "$new_list" "$preset")
         fi
@@ -142,7 +155,7 @@ _set_preset_setter_opts() {
     fi
 
     wallpaper_presets=$(_get_device_presets)
-    wallpaper_presets=$(_update_presets_to_screen_count "$wallpaper_presets")
+    wallpaper_presets=$(_update_presets_to_active_screens "$wallpaper_presets")
 
     if ! [ "$wallpaper_presets" ]; then
         log_status "No presets available. Exiting..."
