@@ -61,20 +61,33 @@ _get_preset_setting_num_screens() {
     echo "$i"
 }
 
-# Updates the screen layout presets list to match the current screen count.
+# Updates the screen layout presets list to match the current connected screens.
 # @param {list} 1 Screen layout presets list.
 # @returns {list} New screen layout presets list.
 #
-_update_presets_to_screen_count() {
+_update_presets_to_connected_screens() {
     new_list=""
     screen_count=$(get_screen_count)
+    connected_screens=$(get_screen_names)
 
     IFS=$CHAR_NL
     for preset in $1; do
         unset IFS
         setting_string=$(get_col --list "$preset" --idx 3)
         if [ "$(_get_preset_setting_num_screens "$setting_string")" -le "$screen_count" ]; then
-            new_list=$(list_cat "$new_list" "$preset")
+            available_preset=0
+            IFS=:
+            for screen_setting in $setting_string; do
+                unset IFS
+                screen_setting=${screen_setting%%;*}
+                if ! echo "$connected_screens" | grep -Fqx -e "$screen_setting"; then
+                    available_preset=1
+                fi
+                unset screen_setting
+            done
+            if [ "$available_preset" -eq 0 ]; then
+                new_list=$(list_cat "$new_list" "$preset")
+            fi
         fi
     done
 
@@ -169,7 +182,7 @@ _set_preset_setter_opts() {
     fi
 
     screenlayout_presets=$(_get_device_presets)
-    screenlayout_presets=$(_update_presets_to_screen_count "$screenlayout_presets")
+    screenlayout_presets=$(_update_presets_to_connected_screens "$screenlayout_presets")
 
     if ! [ "$screenlayout_presets" ]; then
         log_status "No presets available. Exiting..."
