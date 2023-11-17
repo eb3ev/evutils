@@ -23,6 +23,8 @@
 #    clear-log = Clears logs.
 #    log = Show logs using less.
 #    elog = Show logs using evedit.
+#    update-history = Updates the availability of evopen's and evedit's history
+#    files.
 
 
 
@@ -32,6 +34,27 @@
 . "$EVUTILS_HOME/lib/config"
 
 _cmds=""
+
+# Updates the availability of history file files.
+# @param {path} 1 History file path.
+#
+_update_history_files() {
+    IFS=$CHAR_NL
+    for file in $(cat "$1" 2>/dev/null); do
+        unset IFS
+        if ! [ -e "$file" ]; then
+            list_rm --file "$1" -- "$file"
+            log_status "${file} from ${1} removed."
+        fi
+    done
+}
+
+# Updates the availability of evopen's and evedit's history files.
+#
+_update_history() {
+    _update_history_files "$EVOPEN_HISTFILE"
+    _update_history_files "$EVEDIT_HISTFILE"
+}
 
 # Run the commands.
 #
@@ -74,6 +97,9 @@ _run() {
                     log_status "No logs."
                 fi
                 ;;
+            update-history)
+                _update_history
+                ;;
         esac
     done
 }
@@ -89,7 +115,8 @@ is_available_cmd() {
             clear-history|\
             clear-log|\
             log|\
-            elog)
+            elog|\
+            update-history)
             return 0
             ;;
     esac
