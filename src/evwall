@@ -205,7 +205,7 @@ _set_setter_opts() {
 
     while [ "$screens" ]; do
         # Select screen.
-        screen=$(echo "$screens" | eval evmenu "$_evmenu_opts" --prompt "''")
+        screen=$(echo "$screens" | eval evmenu "$_evmenu_opts" --prompt "'󰍹'")
         if ! [ "$screen" ]; then
             exit
         fi
@@ -228,7 +228,7 @@ _set_setter_opts() {
         fi
 
         # Select wallpaper option setting.
-        wallpaper_opt_name=$(get_keys --delim "," --list "$WALLPAPER_OPTS" | eval evmenu "$_evmenu_opts" --prompt "'漣'")
+        wallpaper_opt_name=$(get_keys --delim "," --list "$WALLPAPER_OPTS" | eval evmenu "$_evmenu_opts" --prompt "'󰒓'")
         if ! [ "$wallpaper_opt_name" ]; then
             exit
         fi
