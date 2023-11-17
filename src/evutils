@@ -40,11 +40,11 @@ _cmds=""
 #
 _update_history_files() {
     IFS=$CHAR_NL
-    for file in $(cat "$1" 2>/dev/null); do
+    for _file in $(cat "$1" 2>/dev/null); do
         unset IFS
-        if ! [ -e "$file" ]; then
-            list_rm --file "$1" -- "$file"
-            log_status "${file} from ${1} removed."
+        if ! [ -e "$_file" ]; then
+            list_rm --file "$1" -- "$_file"
+            log_status "${_file} from ${1} removed."
         fi
     done
 }
