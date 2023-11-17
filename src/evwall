@@ -162,7 +162,7 @@ _set_preset_setter_opts() {
         exit 1
     fi
 
-    preset_name=$(get_col --idx 2 --list "$wallpaper_presets" | eval evmenu "$_evmenu_opts" --prompt " Presets")
+    preset_name=$(get_col --idx 2 --list "$wallpaper_presets" | eval evmenu "$_evmenu_opts" --prompt "'Wallpaper Presets'")
 
     if ! [ "$preset_name" ]; then
         exit
@@ -218,7 +218,7 @@ _set_setter_opts() {
 
     while [ "$screens" ]; do
         # Select screen.
-        screen=$(echo "$screens" | eval evmenu "$_evmenu_opts" --prompt "'󰍹'")
+        screen=$(echo "$screens" | eval evmenu "$_evmenu_opts" --prompt "'Select Screen'")
         if ! [ "$screen" ]; then
             exit
         fi
@@ -235,13 +235,13 @@ _set_setter_opts() {
         esac
 
         # Select wallpaper.
-        wallpaper=$(_get_wallpapers | eval evmenu "$_evmenu_opts" --prompt "''")
+        wallpaper=$(_get_wallpapers | eval evmenu "$_evmenu_opts" --prompt "'Set ${screen} Wallpaper'")
         if ! [ "$wallpaper" ]; then
             exit
         fi
 
         # Select wallpaper option setting.
-        wallpaper_opt_name=$(get_keys --delim "," --list "$WALLPAPER_OPTS" | eval evmenu "$_evmenu_opts" --prompt "'󰒓'")
+        wallpaper_opt_name=$(get_keys --delim "," --list "$WALLPAPER_OPTS" | eval evmenu "$_evmenu_opts" --prompt "'Set Wallpaper Option'")
         if ! [ "$wallpaper_opt_name" ]; then
             exit
         fi
