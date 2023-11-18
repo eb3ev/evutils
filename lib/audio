@@ -30,10 +30,9 @@ get_outputs() {
                 ;;
         esac
         if [ "$ports_found" -eq 0 ]; then
-            port="${line%%:*}"
-            port=$(echo "$port" | sed 's/\s*\[/[/')
-            port_description=$(echo "$port" | sed 's/\[Out\] //')
-            curr_sink=$(list_cat "$curr_sink" "${port_description} - ${curr_sink_description}${delim}${curr_sink_id}${delim}${port}")
+            port_id=$(echo "${line%%:*}" | sed 's/^\s*//')
+            port_description=$(echo "${line#*: }" | sed 's/ (.*)//')
+            curr_sink=$(list_cat "$curr_sink" "${port_description} (${curr_sink_description})${delim}${curr_sink_id}${delim}${port_id}")
         else
             case $line in
                 "Sink #"*)
