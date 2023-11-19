@@ -111,7 +111,7 @@ _search_dirs() {
 # @returns {path} Path to file.
 #
 _search_history() {
-    eval evmenu "$_evmenu_opts" --fuzzy --prompt "$_prompt" < "$EVEDIT_HISTFILE"
+    eval evmenu "$_evmenu_opts" --fuzzy --prompt "'$_prompt'" < "$EVEDIT_HISTFILE"
 }
 
 # Get the file to edit from searches.

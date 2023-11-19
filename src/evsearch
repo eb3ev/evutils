@@ -89,7 +89,7 @@ _run() {
         _evmenu_opts="${_evmenu_opts} --term"
     fi
 
-    selection=$(_get_searches | eval evmenu "$_evmenu_opts" --prompt "$_prompt")
+    selection=$(_get_searches | eval evmenu "$_evmenu_opts" --prompt "'$_prompt'")
 
     if ! [ "$selection" ]; then
         exit
