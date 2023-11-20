@@ -25,11 +25,14 @@
 #    elog = Show logs using evedit.
 #    update-history = Updates the availability of evopen's and evedit's history
 #    files.
+#    set-browser = Set the browser to use for evutils', programs overwriting the
+#    browser set in configuration file.
 
 
 
 . "$EVUTILS_HOME/lib/log"
 . "$EVUTILS_HOME/lib/list"
+. "$EVUTILS_HOME/lib/browser"
 . "$EVUTILS_HOME/lib/cache"
 . "$EVUTILS_HOME/lib/config"
 
@@ -54,6 +57,26 @@ _update_history_files() {
 _update_history() {
     _update_history_files "$EVOPEN_HISTFILE"
     _update_history_files "$EVEDIT_HISTFILE"
+}
+
+# Set default browser to use overriding the browser set in configuration
+# file, using evmenu.
+#
+_set_browser() {
+    if ! [ "$(get_available_browsers)" ]; then
+        log_error "No available browsers. Exiting..."
+    fi
+    selection=""
+    if ! { [ -t 0 ] || [ -p /dev/stdin ]; }; then
+        selection=$(get_available_browsers | evmenu --gui --prompt "Set Browser")
+    else
+        selection=$(get_available_browsers | evmenu --term --prompt "Set Browser")
+    fi
+    if ! [ "$selection" ]; then
+        exit
+    fi
+    mk_config_dir
+    echo "$selection" > "$EVBROWSERRC" && log_status "Browser set to ${selection}"
 }
 
 # Run the commands.
@@ -100,6 +123,9 @@ _run() {
             update-history)
                 _update_history
                 ;;
+            set-browser)
+                _set_browser
+                ;;
         esac
     done
 }
@@ -116,7 +142,8 @@ is_available_cmd() {
             clear-log|\
             log|\
             elog|\
-            update-history)
+            update-history|\
+            set-browser)
             return 0
             ;;
     esac
