@@ -94,7 +94,7 @@ _mount_dev() {
     case $_dev_type in
         USB)
             output=$(mktemp)
-            udisksctl mount -b "$_dev" >"$output" 2>/dev/null \
+            udisksctl mount -b "$_dev" > "$output" 2>/dev/null \
                 || { log_erorr "Mounting ${_dev_description} failed. Exiting..." && rm -f -- "$output" && exit 1; }
             mount_pt=$(awk '{print $4}' "$output")
             rm -f "$output"
