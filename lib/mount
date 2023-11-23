@@ -10,6 +10,9 @@
 . "$EVUTILS_HOME/lib/encode"
 . "$EVUTILS_HOME/lib/list"
 
+PREFIX_MTP_MOUNT_PT="$HOME/.local/mtp"
+PREFIX_ANDROID_MOUNT_PT="android"
+
 # Gets a list of mountable removable devices.
 # @returns {list} Mountable removable devices list in the format of
 # <Device Description> , USB , <Device Name>
@@ -80,16 +83,59 @@ get_unmountable_removable_devs() {
 #
 get_mountable_android_devs() {
     android_dev_list=""
+    delim=" , "
+    IFS=$CHAR_NL
+    for android_dev_info in $(simple-mtpfs -l 2>/dev/null); do
+        unset IFS
+        android_dev_id=${android_dev_info%%:*}
+        android_dev_description=$(echo "${android_dev_info#*: }" | sed 's/ (MTP)//')
+        android_dev_list=$(list_cat "$android_dev_list" "${android_dev_description}${delim}ANDROID${delim}${android_dev_id}")
+    done
     echo "$android_dev_list"
 }
 
 # Gets a list of unmountable android devices.
 # @returns {list} Unmountable android devices list in the format of
-# <Device Description> , ANDROID , <Device Name> , <Mount Point>
+# <Device Description> , ANDROID ,  , <Mount Point>
 #
 get_unmountable_android_devs() {
     android_dev_list=""
+    delim=" , "
+    IFS=$CHAR_NL
+    for mounted_android_dev_info in $(grep -e "^simple-mtpfs " -- "/proc/mounts" 2>/dev/null); do
+        unset IFS
+        android_dev_mount_pt=$(echo "$mounted_android_dev_info" | awk '{print $2}')
+        android_dev_description=$(echo "${android_dev_mount_pt##*/}" | sed 's/\b\(.\)/\u\1/g;s/-/ /g')
+        android_dev_list=$(list_cat "$android_dev_list" "${android_dev_description}${delim}ANDROID${delim}${delim}${android_dev_mount_pt}")
+    done
     echo "$android_dev_list"
+}
+
+# Create a mount point for an android device.
+# @param {string} 1 Optional android device name.
+# @returns {path} Mount point.
+#
+create_android_mount_pt() {
+    android_dev_name=""
+    if [ "$1" ]; then
+        android_dev_name=$(echo "$1" | sed 's/\(.*\)/\L\1/;s/\s/-/g')
+    fi
+    mkdir -p "$PREFIX_MTP_MOUNT_PT"
+    expansion_index=""
+    while true; do
+        new_android_mount_pt="$PREFIX_MTP_MOUNT_PT/${PREFIX_ANDROID_MOUNT_PT}${android_dev_name:+-${android_dev_name}}${expansion_index:+-${expansion_index}}"
+        if ! [ -e "$new_android_mount_pt" ]; then
+            mkdir -p "$new_android_mount_pt" && echo "$new_android_mount_pt" && return
+            return 1
+        else
+            if ! [ "$(ls "$new_android_mount_pt")" ]; then
+                mkdir -p "$new_android_mount_pt" && echo "$new_android_mount_pt" && return
+                return 1
+            fi
+        fi
+        expansion_index=${expansion_index:-0}
+        expansion_index=$((expansion_index + 1))
+    done
 }
 
 # Gets a list of all mountable removable devices. This includes USB storage

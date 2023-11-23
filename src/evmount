@@ -100,6 +100,9 @@ _mount_dev() {
             rm -f "$output"
             ;;
         ANDROID)
+            mount_pt=$(create_android_mount_pt "${_dev_description}")
+            simple-mtpfs --device "$_dev" "$mount_pt" >/dev/null 2>&1 \
+                || { rm -rf "$mount_pt"; log_error "Unable to mount ${_dev_description}. Maybe access permissions is denied or device is already mounted. Exiting..."; exit 1; }
             ;;
     esac
 
@@ -123,6 +126,9 @@ _unmount_dev() {
                 || { log_error "Unmounting ${_dev_description} failed. Exiting..." && exit 1; }
             ;;
         ANDROID)
+            fusermount -u "${_dev_mount_pt}" >/dev/null 2>&1 \
+                || { log_error "Unmounting ${_dev_description} failed. Exiting..." && exit 1; }
+            rm -rf "$_dev_mount_pt"
             ;;
     esac
 
