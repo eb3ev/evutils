@@ -78,7 +78,7 @@ get_curr_sink_port_id() {
     IFS=$CHAR_NL
     for line in $(pactl list sinks); do
         unset IFS
-        if [ "$sink_found" ]; then
+        if [ "$sink_found" -eq 0 ]; then
             case $line in
                 *"Active Port: "*)
                     echo "${line##*: }"
@@ -86,7 +86,7 @@ get_curr_sink_port_id() {
                     ;;
             esac
         fi
-        if echo "$line" | grep -Fq "$curr_sink_id"; then
+        if echo "$line" | grep -Fq -e "$curr_sink_id"; then
             sink_found=0
         fi
     done
@@ -104,7 +104,7 @@ get_alt_outputs() {
     IFS=$CHAR_NL
     for output in $(get_outputs); do
         unset IFS
-        if ! echo "$output" | grep -Fq " , ${curr_sink_id} , ${curr_sink_port_id}"; then
+        if ! echo "$output" | grep -Fq -e " , ${curr_sink_id} , ${curr_sink_port_id}"; then
             alt_outputs=$(list_cat "$alt_outputs" "$output")
         fi
     done
