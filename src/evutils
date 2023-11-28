@@ -36,6 +36,17 @@
 . "$EVUTILS_HOME/lib/cache"
 . "$EVUTILS_HOME/lib/config"
 
+_CMD_LIST="\
+clear-cache
+rm-cache
+clear-history
+clear-log
+log
+elog
+update-history
+set-browser\
+"
+
 _cmds=""
 
 # Updates the availability of history file files.
@@ -135,19 +146,11 @@ _run() {
 # @returns {bool} True if the command option is supported and false otherwise.
 #
 is_available_cmd() {
-    case $1 in
-        clear-cache|\
-            rm-cache|\
-            clear-history|\
-            clear-log|\
-            log|\
-            elog|\
-            update-history|\
-            set-browser)
-            return 0
-            ;;
-    esac
-    return 1
+    if echo "$_CMD_LIST" | grep -Fqx -e "$1"; then
+        return 0
+    else
+        return 1
+    fi
 }
 
 main() {
