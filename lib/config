@@ -192,7 +192,7 @@ update_config() {
                 esac
                 ;;
             *)
-                echo ":: [WARNING] evutils Configuration: Unknown setting $name. Ignoring..." >&2
+                echo ":: [WARNING] evutils Configuration: Unknown setting ${name}. Ignoring..." >&2
                 ;;
         esac
     done < "$tmp"
