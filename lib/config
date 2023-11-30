@@ -52,8 +52,8 @@ EVUTILS_WALLPAPERS_PATH=${EVUTILS_WALLPAPERS_PATH:-}
 EVUTILS_NOTIFICATIONS=${EVUTILS_NOTIFICATIONS:-0}
 # Enable/Disable logging errors.
 EVUTILS_LOG=${EVUTILS_LOG:-0}
-# Enable/Disable status messages.
-EVUTILS_VERBOSE=${EVUTILS_VERBOSE:-0}
+# Message verbosity level.
+EVUTILS_VERBOSITY_LVL=${EVUTILS_VERBOSE:-3}
 
 # Create evutils configuration directory if it doesn't exist
 #
@@ -167,21 +167,27 @@ update_config() {
                         ;;
                 esac
                 ;;
-            verbose)
+            verbosity)
                 setting_val=$(eval echo "$value")
                 case $setting_val in
-                    true|1)
-                        EVUTILS_VERBOSE=${EVUTILS_VERBOSE:-0}
+                    0|none)
+                        EVUTILS_VERBOSITY_LVL=${EVUTILS_VERBOSITY_LVL:-0}
                         ;;
-                    false|0)
-                        EVUTILS_VERBOSE=${EVUTILS_VERBOSE:-1}
+                    1|errors)
+                        EVUTILS_VERBOSITY_LVL=${EVUTILS_VERBOSITY_LVL:-1}
+                        ;;
+                    2|warnings)
+                        EVUTILS_VERBOSITY_LVL=${EVUTILS_VERBOSITY_LVL:-2}
+                        ;;
+                    3|status|all)
+                        EVUTILS_VERBOSITY_LVL=${EVUTILS_VERBOSITY_LVL:-3}
                         ;;
                 esac
-                case $EVUTILS_VERBOSE in
-                    0|1)
+                case $EVUTILS_VERBOSITY_LVL in
+                    0|1|2|3)
                         ;;
                     *)
-                        EVUTILS_VERBOSE=0
+                        EVUTILS_VERBOSITY_LVL=3
                         ;;
                 esac
                 ;;

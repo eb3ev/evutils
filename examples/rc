@@ -32,8 +32,12 @@ notifications = true
 # Enable / disable caching log. Enabled by default.
 # Log found in ${XDG_CACHE_DIR:-$HOME/.cache}/evutils/log
 log = true
-# Enable / disable status messages to stdout. Enabled by default.
-verbose = true
+# Message verbosity level of evutils programs.
+# 0, none = Don't show any messages.
+# 1, errors = Only show error messages.
+# 2, warnings = Only show warning messages and error messages.
+# 3, status, all = Show all messages.
+verbosity = all
 
 #=== evmenu
 

@@ -47,7 +47,7 @@ log_error() {
     if [ "$EVUTILS_LOG" -eq 0 ]; then
         add_log "$log_msg"
     fi
-    if [ "$EVUTILS_VERBOSE" -eq 0 ]; then
+    if [ "$EVUTILS_VERBOSITY_LVL" -ge 1 ]; then
         echo "$log_msg" >&2
     fi
     notification "$err_source" "$1"
@@ -63,7 +63,7 @@ log_warning() {
     if [ "$EVUTILS_LOG" -eq 0 ]; then
         add_log "$log_msg"
     fi
-    if [ "$EVUTILS_VERBOSE" -eq 0 ]; then
+    if [ "$EVUTILS_VERBOSITY_LVL" -ge 2 ]; then
         echo "$log_msg" >&2
     fi
     notification "$warn_source" "$1"
@@ -78,7 +78,7 @@ log_status() {
     if [ "$EVUTILS_LOG" -eq 0 ]; then
         add_log "$log_msg"
     fi
-    if [ "$EVUTILS_VERBOSE" -eq 0 ]; then
+    if [ "$EVUTILS_VERBOSITY_LVL" -ge 3 ]; then
         echo "$log_msg"
     fi
     notification "$status_source" "$1"
