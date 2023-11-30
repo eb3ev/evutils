@@ -79,9 +79,11 @@ get_programs_from_directories() {
         shift
     done
 
-    IFS=:
-    stest -flx $dirs | sort -u
-    unset IFS
+    if [ "$dirs" ]; then
+        IFS=:
+        find -L $dirs -maxdepth 1 -type f -perm -100 -printf "%f\n" 2>/dev/null | sort -u
+        unset IFS
+    fi
 }
 
 # Gets all available man pages.
