@@ -112,16 +112,6 @@ _rename() {
             continue
         fi
 
-        if echo "$working_dir_files" | grep -Fqx -e "$new_name"; then
-            log_warning "Cannot rename ${old_name} to ${new_name} -- ${new_name} already exists. Ignoring..."
-            continue
-        fi
-
-        if echo "$_renamed_files" | grep -Fqx -e "$new_name"; then
-            log_warning "Cannot rename ${old_name} to ${new_name} -- ${new_name} already exists. Ignoring..."
-            continue
-        fi
-
         if ! is_valid_filename "$new_name"; then
             log_warning "Cannot rename ${old_name} to ${new_name} -- illegal filename characters. Ignoring..."
             continue
@@ -131,6 +121,16 @@ _rename() {
             "$old_name")
                 ;;
             *)
+                if echo "$working_dir_files" | grep -Fqx -e "$new_name"; then
+                    log_warning "Cannot rename ${old_name} to ${new_name} -- ${new_name} already exists. Ignoring..."
+                    continue
+                fi
+
+                if echo "$_renamed_files" | grep -Fqx -e "$new_name"; then
+                    log_warning "Cannot rename ${old_name} to ${new_name} -- ${new_name} already exists. Ignoring..."
+                    continue
+                fi
+
                 if [ "$_require_root" -eq 0 ]; then
                     sudo mv -n -- "$old_name" "$new_name" || { log_error "Renaming ${old_name} to ${new_name} failed. Exiting..." && exit 1; }
                 else
