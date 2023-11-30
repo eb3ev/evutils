@@ -105,6 +105,7 @@ _rename() {
     i=1
     while read -r old_name; do
         new_name=$(get_row --idx "$i" --file "$_new_files")
+        i=$((i + 1))
 
         if ! [ "$new_name" ]; then
             log_warning "Cannot rename ${old_name} to an empty line. Ignoring..."
@@ -138,8 +139,6 @@ _rename() {
                 _renamed_files=$(list_cat "$_renamed_files" "$new_name")
                 ;;
         esac
-
-        i=$((i + 1))
     done < "$_old_files"
 
     rm -f -- "$_old_files" "$_new_files"
