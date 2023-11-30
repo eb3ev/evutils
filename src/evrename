@@ -96,7 +96,6 @@ _rename() {
     fi
 
     if cmp --silent "$_old_files" "$_new_files"; then
-        log_status "No files were renamed. Exiting..."
         exit
     fi
 
