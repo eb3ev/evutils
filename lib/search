@@ -101,19 +101,19 @@ search_files() {
     case $filters in
         *TXT*)
             fd_opts="${fd_opts} --ignore-file ${FILTER_TXT}"
-            if ! echo "$filters" | grep -Fq "DOC"; then
+            if ! echo "$filters" | grep -Fq -e "DOC"; then
                 fd_opts="${fd_opts} $(sed 's/\$//g;s/^\\/-E '\''*/;s/$/'\''/;s/\\//g' "$FILTER_DOC" | tr '\r\n' ' ')"
             fi
-            if ! echo "$filters" | grep -Fq "IMG"; then
+            if ! echo "$filters" | grep -Fq -e "IMG"; then
                 fd_opts="${fd_opts} $(sed 's/\$//g;s/^\\/-E '\''*/;s/$/'\''/;s/\\//g' "$FILTER_IMG" | tr '\r\n' ' ')"
             fi
-            if ! echo "$filters" | grep -Fq "VID"; then
+            if ! echo "$filters" | grep -Fq -e "VID"; then
                 fd_opts="${fd_opts} $(sed 's/\$//g;s/^\\/-E '\''*/;s/$/'\''/;s/\\//g' "$FILTER_VID" | tr '\r\n' ' ')"
             fi
-            if ! echo "$filters" | grep -Fq "AUD"; then
+            if ! echo "$filters" | grep -Fq -e "AUD"; then
                 fd_opts="${fd_opts} $(sed 's/\$//g;s/^\\/-E '\''*/;s/$/'\''/;s/\\//g' "$FILTER_AUD" | tr '\r\n' ' ')"
             fi
-            if ! echo "$filters" | grep -Fq "ZIP"; then
+            if ! echo "$filters" | grep -Fq -e "ZIP"; then
                 fd_opts="${fd_opts} $(sed 's/\$//g;s/^\\/-E '\''*/;s/$/'\''/;s/\\//g' "$FILTER_ARCHIVE" | tr '\r\n' ' ')"
             fi
             ;;

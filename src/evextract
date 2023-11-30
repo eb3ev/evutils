@@ -60,7 +60,7 @@ _set_file() {
 
     if ! { [ -t 0 ] || [ -p /dev/stdin ]; }; then
         _evmenu_opts="${_evmenu_opts} --gui"
-    elif ! echo "$_evmenu_opts" | grep -Fq -- "--gui"; then
+    elif ! echo "$_evmenu_opts" | grep -Fq -e "--gui"; then
         _evmenu_opts="${_evmenu_opts} --term"
     fi
 

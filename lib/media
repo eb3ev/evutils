@@ -78,7 +78,7 @@ player_control() {
     while [ "$1" ]; do
         case $1 in
             --player)
-                if echo "$running_players" | grep -Fqx -- "$2"; then
+                if echo "$running_players" | grep -Fqx -e "$2"; then
                     players=$(list_cat "$players" "$2" ":")
                 fi
                 shift
@@ -108,7 +108,7 @@ player_control() {
             -?*)
                 ;;
             *)
-                if echo "$running_players" | grep -Fqx -- "$1"; then
+                if echo "$running_players" | grep -Fqx -e "$1"; then
                     players=$(list_cat "$players" "$1" ":")
                 fi
                 ;;
@@ -117,7 +117,7 @@ player_control() {
     done
 
     while [ "$1" ]; do
-        if echo "$running_players" | grep -Fqx -- "$1"; then
+        if echo "$running_players" | grep -Fqx -e "$1"; then
             players=$(list_cat "$players" "$1" ":")
         fi
         shift

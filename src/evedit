@@ -121,7 +121,7 @@ _set_file() {
 
     if ! { [ -t 0 ] || [ -p /dev/stdin ]; }; then
         _evmenu_opts="${_evmenu_opts} --gui"
-    elif ! echo "$_evmenu_opts" | grep -Fq -- "--gui"; then
+    elif ! echo "$_evmenu_opts" | grep -Fq -e "--gui"; then
         _evmenu_opts="${_evmenu_opts} --term"
     fi
 
@@ -138,7 +138,7 @@ _set_file() {
 
         selection=$(_search_history) 
         if [ "$selection" ]; then
-            if grep -Fqx "$selection" -- "$EVEDIT_HISTFILE"; then
+            if grep -Fqx -e "$selection" -- "$EVEDIT_HISTFILE"; then
                 if ! [ -e "$selection" ]; then
                     list_rm --file "$EVEDIT_HISTFILE" -- "$selection"
                     log_error "${selection} no longer exists. Exiting..."

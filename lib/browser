@@ -81,7 +81,7 @@ get_available_browsers() {
 # @returns {bool} True if browser is installed and supported and false otherwise.
 #
 is_available_browser() {
-    if get_available_browsers | grep -Fqx "$1"; then
+    if get_available_browsers | grep -Fqx -e "$1"; then
         return 0
     else
         return 1

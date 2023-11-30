@@ -60,7 +60,7 @@ _update_files() {
     IFS=$CHAR_NL
     for file in $_files; do
         unset IFS
-        if echo "$working_dir_files" | grep -Fqx -- "$file"; then
+        if echo "$working_dir_files" | grep -Fqx -e "$file"; then
             echo "${file##*/}" >> "$_old_files"
             echo "${file##*/}" >> "$_new_files"
             _working_dir_files=$(list_rm --list "$_working_dir_files" -- "$file")
@@ -111,12 +111,12 @@ _rename() {
             continue
         fi
 
-        if echo "$working_dir_files" | grep -Fqx -- "$new_name"; then
+        if echo "$working_dir_files" | grep -Fqx -e "$new_name"; then
             log_warning "Cannot rename ${old_name} to ${new_name} -- ${new_name} already exists. Ignoring..."
             continue
         fi
 
-        if echo "$_renamed_files" | grep -Fqx -- "$new_name"; then
+        if echo "$_renamed_files" | grep -Fqx -e "$new_name"; then
             log_warning "Cannot rename ${old_name} to ${new_name} -- ${new_name} already exists. Ignoring..."
             continue
         fi

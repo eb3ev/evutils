@@ -98,7 +98,7 @@ get_man_pages() {
 # @returns {bool} True if it is a valid man page and false otherwise.
 #
 is_man_page() {
-    if get_man_pages | grep -Fqx -- "$1"; then
+    if get_man_pages | grep -Fqx -e "$1"; then
         return 0
     else
         return 1
