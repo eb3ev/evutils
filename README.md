@@ -1,11 +1,11 @@
-# Evutils
+# evutils
 
 Utilitiy POSIX shell scripts for linux.
 
 These scripts serve as a wrapper for several programs to add additional
-functionality or improve ease of use.
+functionality or to improve ease of use.
 
-Documentation can be found inside the scripts inside `src`.
+Documentation can be found within the scripts inside `src`.
 
 ## Features
 
@@ -40,8 +40,8 @@ to use and open links.
 #### `evmenu`
 - A wrapper for using `rofi` as a GUI menu and `fzf` as a terminal menu.
 
-- A wrapper for creating files or directories.
 #### `evmk`
+- A wrapper for creating files or directories.
 
 #### `evmount`
 - A wrapper for mounting removable USB devices or android devices.
@@ -124,7 +124,8 @@ variable.
 - [`fzf`](https://github.com/junegunn/fzf)
 - [`rofi`](https://github.com/davatorium/rofi)
 - `udisksctl` from `udisks2`
-- [`simple-mtpfs`](https://github.com/phatina/simple-mtpfs)
+- [`simple-mtpfs`](https://github.com/phatina/simple-mtpfs) *Optional: required
+for mounting android devices via MTP*
 - [`colorpicker`](https://github.com/Jack12816/colorpicker)
 - `sudoedit` from `sudo`
 - [`xwallpaper`](https://github.com/stoeckmann/xwallpaper)
@@ -136,6 +137,19 @@ variable.
 - `wmctrl`
 - `xrandr` from `xorg-xrandr`
 - `man` from `man-db`
+
+```sh
+# pacman
+
+sudo pacman -S --needed fd fzf rofi udisks2 colorpicker sudo xwallpaper \
+    speedtest-cli playerctl libpulse libnotify xclip wmctrl xorg-xrandr man-db
+```
+
+```sh
+# AUR via paru
+
+paru -S --needed simple-mtpfs
+```
 
 ## Configuration
 
