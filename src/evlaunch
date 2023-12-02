@@ -81,7 +81,11 @@ _get_programs() {
 # @returns {program} Selected program.
 #
 _get_program() {
-    _get_programs | evmenu --prompt "$_prompt"
+    if ! { [ -t 0 ] || [ -p /dev/stdin ]; }; then
+        _get_programs | evmenu --gui --prompt "$_prompt"
+    else
+        _get_programs | evmenu --term --prompt "$_prompt"
+    fi
 }
 
 # Run selected program.
