@@ -9,111 +9,84 @@ Documentation can be found inside the scripts inside `src`.
 
 ## Features
 
-#### evaudio
+#### `evaudio`
+- Set the audio output to use, using a menu.
 
-Set the audio output to use using a menu.
+#### `evbookmarks`
+- Select and open a bookmarked link into a browser.
 
-#### evbookmarks
-
-Select and open a bookmarked link into a browser.
-
-#### evbrowser
-
-A wrapper for opening browsers. This allows for easily switching which browser
+#### `evbrowser`
+- A wrapper for opening browsers. This allows for easily switching which browser
 to use and open links.
 
-#### evclip
+#### `evclip`
+- Copy text, path to a file or the current working directory to clipboard.
 
-Copy text, path to a file or the current working directory to clipboard.
+#### `evemoji`
+- Select an emoji from a menu and copy it to clipboard.
 
-#### evemoji
+#### `evextract`
+- Extract archive or compressed files.
 
-Select an emoji from a menu and copy it to clipboard.
+#### `evfm`
+- A wrapper for opening a terminal file manager.
 
-#### evextract
+#### `evlaunch`
+- Launch executables found in `PATH` using a menu.
 
-Extract archive or compressed files.
+#### `evman`
+- A wrapper for using `man`. Can be used to search for a man page using a menu.
 
-#### evfm
+#### `evmenu`
+- A wrapper for using `rofi` as a GUI menu and `fzf` as a terminal menu.
 
-A wrapper for opening a terminal file manager.
+- A wrapper for creating files or directories.
+#### `evmk`
 
-#### evlaunch
+#### `evmount`
+- A wrapper for mounting removable USB devices or android devices.
 
-Launch executables found in `PATH` using a menu.
+#### `evopen`
+- Open files using their respective programs.
 
-#### evman
+#### `evpass`
+- A wrapper for using rofi as a password entry prompt.
 
-A wrapper for using `man`. Can be used to search for a man page using a menu.
+#### `evpause`
+- A wrapper for pausing, playing or stopping media players.
+- Useful when there are multiple media players running.
 
-#### evmenu
+#### `evpip`
+- Select and pick a colour from the screen.
 
-A wrapper for using `rofi` as a GUI menu and `fzf` as a terminal menu.
+#### `evrename`
+- A useful way to rename a file or multiple files in a terminal editor.
 
-#### evmk
+#### `evscreen`
+- A wrapper for setting the X screen layout.
 
-A wrapper for creating files or directories.
+#### `evsearch`
+- Search for files.
 
-#### evmount
+#### `evspeedtest`
+- A wrapper for getting your network speed info using `speedtest`.
 
-A wrapper for mounting removable USB devices or android devices.
+#### `evterm`
+- A wrapper for opening a terminal.
 
-#### evopen
+#### `evutils`
+- Run commmands that control the behaviour of the other evutils scripts.
 
-Open files using their respective programs.
+#### `evwall`
+- A wallpaper setter.
 
-#### evpass
+#### `evwkill`
+- Kill windows.
 
-A wrapper for using rofi as a password entry prompt.
-
-#### evpause
-
-A wrapper for pausing, playing or stopping media players. Useful when there are
-multiple media players running.
-
-#### evpip
-
-Select and pick a colour from the screen.
-
-#### evrename
-
-A useful way to rename a file or multiple files in a terminal editor.
-
-#### evscreen
-
-A wrapper for setting the X screen layout.
-
-#### evsearch
-
-Search for files.
-
-#### evspeedtest
-
-A wrapper for getting your network speed info using `speedtest`.
-
-#### evterm
-
-A wrapper for opening a terminal.
-
-#### evutils
-
-Run commmands that control the behaviour of the other evutils scripts.
-
-#### evwall
-
-A wallpaper setter.
-
-#### evwkill
-
-Kill windows.
-
-#### evwrite
-
-Write text inside a terminal editor and have it's contents copied to clipboard.
-Useful when you want to input text somewhere but would prefer to use your, favourite
+#### `evwrite`
+- Write text inside a terminal editor and have it's contents copied to clipboard.
+- Useful when you want to input text somewhere but would prefer to use your, favourite
 terminal editor for it.
-
-####
 
 ## Installation
 
@@ -125,11 +98,12 @@ cd evutils
 make install
 ```
 
-Add environment variable `EVUTILS_HOME` that contains the path to the cloned
+Export environment variable `EVUTILS_HOME` that contains the path to the cloned
 repository directory.
 
 ```sh
 # e.g. ~/.profile
+
 export EVUTILS_HOME="/path/to/evutils"
 ```
 
@@ -167,10 +141,7 @@ variable.
 
 - Example configuration file found in `examples/rc`. Place this configuration file
 inside `$XDG_CONFIG_HOME/evutils` or `$HOME/.config/evutils`.
-
 - To set bookmarks, see `examples/bookmarks`.
-
 - To set screen layout presets, see `examples/screenlayout-presets`.
-
 - To set wallpaper presets, see `examples/wallpaper-presets`.
 
