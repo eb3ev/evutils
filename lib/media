@@ -12,7 +12,7 @@
 # @returns {list} The running media players.
 #
 get_running_players() {
-    playerctl -l
+    playerctl -l 2>/dev/null
 }
 
 # Apply the player control.
