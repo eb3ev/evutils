@@ -85,8 +85,8 @@ to use and open links.
 
 #### `evwrite`
 - Write text inside a terminal editor and have it's contents copied to clipboard.
-- Useful when you want to input text somewhere but would prefer to use your, favourite
-terminal editor for it.
+- Useful when you want to input text somewhere else but would prefer to use your
+favourite terminal editor for it.
 
 ## Installation
 
@@ -139,14 +139,14 @@ for mounting android devices via MTP*
 - `man` from `man-db`
 
 ```sh
-# pacman
+# pacman packages
 
 sudo pacman -S --needed fd fzf rofi udisks2 colorpicker sudo xwallpaper \
     speedtest-cli playerctl libpulse libnotify xclip wmctrl xorg-xrandr man-db
 ```
 
 ```sh
-# AUR via paru
+# AUR packages via paru
 
 paru -S --needed simple-mtpfs
 ```
