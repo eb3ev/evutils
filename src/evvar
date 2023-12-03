@@ -39,6 +39,7 @@
 . "$EVUTILS_HOME/lib/log"
 . "$EVUTILS_HOME/lib/file"
 . "$EVUTILS_HOME/lib/list"
+. "$EVUTILS_HOME/lib/encode"
 
 _viewer=PAGER
 _dirs=""
@@ -133,7 +134,10 @@ _run() {
             archive_contents=$(unzip -l "$_archive_file" 2>/dev/null | tail -n +5 | awk -v N=4 '{sep=""; for (i = N; i <= NF; i++) { printf("%s%s",sep,$i); sep=OFS}; printf("\n")}')
             ;;
         *.rar)
-            archive_contents=$(unrar lb "$_archive_file" 2>/dev/null)
+            archive_fname=${_archive_file##*/}
+            archive_file_dir_path=${_archive_file%%$archive_fname*}
+            archive_file_dir_path=${archive_file_dir_path#*/}
+            archive_contents=$(unrar lb "$_archive_file" 2>/dev/null | sed -s "s/$(encode --enc SED_REGEX -- "$archive_file_dir_path")//")
             ;;
         *)
             log_error "Viewing ${_archive_file} file type is unsupported. Exiting..."
