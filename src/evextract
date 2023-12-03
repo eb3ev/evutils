@@ -119,7 +119,7 @@ _run() {
                 fi
                 ;;
             *.gz)
-                { gzip "$file" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
+                { gzip -d "$file" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
                 ;;
             *.zip)
                 if [ "$_target_dir" ]; then
