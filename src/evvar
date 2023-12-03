@@ -32,6 +32,7 @@
 #    PAGER = View contents using less (Default)
 #    STDOUT = View contents in stdout
 #    EDITOR = View contents using evedit
+#    MENU = View contents using evmenu
  
 
 
@@ -96,6 +97,12 @@ _file_tree_viewer() {
         STDOUT)
             echo "$1"
             ;;
+        MENU)
+            if ! { [ -t 0 ] || [ -p /dev/stdin ]; }; then
+                echo "$1" | evmenu --gui --prompt "$_archive_file" >/dev/null
+            else
+                echo "$1" | evmenu --term --prompt "$_archive_file" >/dev/null
+            fi
     esac
 }
 
@@ -170,7 +177,7 @@ main() {
                 ;;
             -v|--view|--viewer)
                 case $2 in
-                    PAGER|STDOUT|EDITOR)
+                    PAGER|STDOUT|EDITOR|MENU)
                         _viewer=$2
                         ;;
                     *)
