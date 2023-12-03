@@ -1,0 +1,216 @@
+#!/bin/sh
+#
+#= Evutils - Evar
+#
+# Archive files.
+#
+#
+#== Synopsis
+#
+# evarchive [options] --file /path/to/file/or/directory ...
+# evarchive [options] /path/to/file/or/directory ...
+# evarchive [options] -- /path/to/file/or/directory ...
+#
+#== Options
+#
+# -f /path/to/file/or/directory, --file /path/to/file/or/directory
+#    The file or directory to archive. Pass multiple --file to archive multiple
+#    files.
+#
+# -o /path/to/output/archive, --out /path/to/output/archive, --output /path/to/output/archive,
+# -t /path/to/output/archive, --target /path/to/output/archive
+#    The output archive file. If unset, the output file name will be based on the
+#    first --file that was passed. If unset or the archive file extensions is
+#    missing then this will default to archiving and compressing to a tar.gz archive.
+
+
+. "$EVUTILS_HOME/lib/log"
+. "$EVUTILS_HOME/lib/file"
+. "$EVUTILS_HOME/lib/list"
+. "$EVUTILS_HOME/lib/program"
+
+_output_archive=""
+
+_files=""
+
+# Set the file to archive the files into.
+#
+_set_output_archive() {
+    if [ "$_output_archive" ]; then
+        if ! is_archive_file "$_output_archive"; then
+            _output_archive="${_output_archive}.tar.gz"
+        fi
+    else
+        _output_archive="${_files%%:*}.tar.gz"
+    fi
+}
+
+# Archive the files.
+#
+_run() {
+    case $_output_archive in
+        *.tar)
+            if is_not_installed "tar"; then
+                log_error "Cannot create ${_output_archive} -- tar is not installed. Exiting..."
+                exit 1
+            fi
+            log_status "Archiving files to ${_output_archive}..."
+            IFS=:
+            tar cf "$_output_archive" $_files >/dev/null 2>&1 \
+                || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
+            ;;
+        *.tar.gz|*.tgz)
+            if is_not_installed "tar"; then
+                log_error "Cannot create ${_output_archive} -- tar is not installed. Exiting..."
+                exit 1
+            fi
+            if is_not_installed "gzip"; then
+                log_error "Cannot create ${_output_archive} -- gzip is not installed. Exiting..."
+                exit 1
+            fi
+            log_status "Archiving and compressing files to ${_output_archive}..."
+            IFS=:
+            tar czf "${_output_archive}" $_files >/dev/null 2>&1 \
+                || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
+            ;;
+        *.tar.bz2|*.tbz2)
+            if is_not_installed "tar"; then
+                log_error "Cannot create ${_output_archive} -- tar is not installed. Exiting..."
+                exit 1
+            fi
+            if is_not_installed "bzip2"; then
+                log_error "Cannot create ${_output_archive} -- bzip2 is not installed. Exiting..."
+                exit 1
+            fi
+            log_status "Archiving and compressing files to ${_output_archive}..."
+            IFS=:
+            tar cjf "${_output_archive}" $_files >/dev/null 2>&1 \
+                || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
+            ;;
+        *.tar.xz)
+            if is_not_installed "tar"; then
+                log_error "Cannot create ${_output_archive} -- tar is not installed. Exiting..."
+                exit 1
+            fi
+            if is_not_installed "xz"; then
+                log_error "Cannot create ${_output_archive} -- xz is not installed. Exiting..."
+                exit 1
+            fi
+            log_status "Archiving and compressing files to ${_output_archive}..."
+            IFS=:
+            tar cJf "${_output_archive}" $_files >/dev/null 2>&1 \
+                || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
+            ;;
+        *.tar.zst)
+            if is_not_installed "tar"; then
+                log_error "Cannot create ${_output_archive} -- tar is not installed. Exiting..."
+                exit 1
+            fi
+            if is_not_installed "zstd"; then
+                log_error "Cannot create ${_output_archive} -- zstd is not installed. Exiting..."
+                exit 1
+            fi
+            log_status "Archiving and compressing files to ${_output_archive}..."
+            IFS=:
+            tar -c --zstd -f "${_output_archive}" $_files >/dev/null 2>&1 \
+                || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
+            ;;
+        *.zip)
+            if is_not_installed "zip"; then
+                log_error "Cannot create ${_output_archive} -- zip is not installed. Exiting..."
+                exit 1
+            fi
+            log_status "Archiving and compressing files to ${_output_archive}..."
+            IFS=:
+            zip -qr "${_output_archive}" $_files >/dev/null 2>&1 \
+                || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
+            ;;
+        *.rar)
+            if is_not_installed "rar"; then
+                log_error "Cannot create ${_output_archive} -- rar is not installed. Exiting..."
+                exit 1
+            fi
+            log_status "Archiving and compressing files to ${_output_archive}..."
+            IFS=:
+            rar a "${_output_archive}" $_files >/dev/null 2>&1 \
+                || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
+            ;;
+        *)
+            log_error "${_output_archive} file type is unsupported. Exiting..."
+            ;;
+    esac
+    unset IFS
+}
+
+main() {
+    while [ "$1" ]; do
+        case $1 in
+            -f|--file)
+                if [ -e "$2" ]; then
+                    _files=$(list_cat "$_files" "$2" ":")
+                else
+                    log_error "Invalid file or directory ${2}. Exiting..."
+                    exit 1
+                fi
+                shift
+                ;;
+            -o|--out|--output|-t|--target)
+                if [ -e "$2" ]; then
+                    log_error "Cannot output to ${2} -- file already exists. Exiting..."
+                    exit 1
+                elif ! is_valid_path "$2"; then
+                    log_error "Invalid path ${2}. Exiting..."
+                    exit 1
+                else
+                    case $2 in
+                        */*)
+                            if ! [ -d "${2%/*}" ]; then
+                                log_error "Cannot output to ${2}. ${2%/*} directory doesn't exist. Exiting..."
+                                exit 1
+                            fi
+                            ;;
+                    esac
+                    _output_archive=$2
+                fi
+                shift
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -?*)
+                log_error "Unknown option ${1}. Exiting..."
+                ;;
+            *)
+                if [ -e "$1" ]; then
+                    _files=$(list_cat "$_files" "$1" ":")
+                else
+                    log_error "Invalid file or directory ${1}. Exiting..."
+                    exit 1
+                fi
+                ;;
+        esac
+        shift
+    done
+
+    while [ "$1" ]; do
+        if [ -e "$1" ]; then
+            _files=$(list_cat "$_files" "$1" ":")
+        else
+            log_error "Invalid file or directory ${1}. Exiting..."
+            exit 1
+        fi
+        shift
+    done
+
+    if ! [ "$_files" ]; then
+        log_error "No files to archive. Exiting..."
+        exit 1
+    fi
+
+    _set_output_archive
+    _run
+}
+
+main "$@"
+

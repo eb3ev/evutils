@@ -9,6 +9,9 @@ Documentation can be found within the scripts inside `src`.
 
 ## Features
 
+#### `evar`
+- Archive files.
+
 #### `evaudio`
 - Set the audio output to use, using a menu.
 
