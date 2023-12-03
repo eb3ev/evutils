@@ -19,7 +19,7 @@
 #
 # -f /path/to/file, --file /path/to/file
 #    The archive file to extract. Pass multiple --file to extract multiple files.
-#    If unset, search for files using evmenu in the set --dir or current working
+#    If unset, search for files using evsearch in the set --dir or current working
 #    directory.
 #
 # -d /dir/path, --dir /dir/path

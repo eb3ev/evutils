@@ -18,7 +18,7 @@
 #== Options
 #
 # -f /path/to/file , --file /path/to/file
-#    The file to edit. If unset, search for files using evmenu in the set --dir 
+#    The file to edit. If unset, search for files using evsearch in the set --dir 
 #    or current working directory. If a path to directory is used then then this
 #    is treated as a file that is will be opened in editor. To open directories
 #    must use --file or -f flag.
