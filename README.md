@@ -152,7 +152,7 @@ required for archiving, extracting or viewing `.tar.bz2` files)*
 - `7z` from [`p7zip`](https://archlinux.org/packages/extra/x86_64/p7zip/) 
 *(Optional: required for extracting `.7z` files)*
 - `rar` and `unrar` from [`rar`](https://aur.archlinux.org/packages/rar) *(Optional: 
-required for archiving, extracting `.rar` files)*
+required for archiving, extracting or viewing `.rar` files)*
 - [`unzip`](https://archlinux.org/packages/extra/x86_64/unzip/) *(Optional: 
 required for extracting or viewing `.zip` files)*
 - [`zip`](https://archlinux.org/packages/extra/x86_64/zip/) *(Optional: required
