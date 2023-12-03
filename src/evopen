@@ -220,6 +220,8 @@ _set_program_cmd() {
         else
             program=$EVUTILS_READER
         fi
+    elif is_archive_file "$_file"; then
+        program=TERM_ARCHIVE_VIEWER
     fi
 
     case $program in
@@ -228,6 +230,9 @@ _set_program_cmd() {
             ;;
         TERM_FM)
             _program_cmd="evfm ${_evfm_opts} -- '${_file}'"
+            ;;
+        TERM_ARCHIVE_VIEWER)
+            _program_cmd="evvar -- '${_file}'"
             ;;
         *)
             if [ "$_fork" -eq 0 ]; then
@@ -242,7 +247,7 @@ _set_program_cmd() {
         if [ -t 0 ] || [ -p /dev/stdin ]; then
             if is_installed "devour"; then
                 case $program in
-                    TERM_EDITOR|TERM_FM)
+                    TERM_EDITOR|TERM_FM|TERM_ARCHIVE_VIEWER)
                         if [ "$_open_new_term" -eq 0 ]; then
                             _program_cmd="${_win_swallower} ${_program_cmd}"
                         # else
