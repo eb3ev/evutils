@@ -132,6 +132,9 @@ _run() {
         *.zip)
             archive_contents=$(unzip -l "$_archive_file" 2>/dev/null | tail -n +5 | awk -v N=4 '{sep=""; for (i = N; i <= NF; i++) { printf("%s%s",sep,$i); sep=OFS}; printf("\n")}')
             ;;
+        *.rar)
+            archive_contents=$(unrar lb "$_archive_file" 2>/dev/null)
+            ;;
         *)
             log_error "Viewing ${_archive_file} file type is unsupported. Exiting..."
             exit 1
