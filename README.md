@@ -129,6 +129,7 @@ variable.
 - [`fzf`](https://github.com/junegunn/fzf)
 - [`rofi`](https://github.com/davatorium/rofi)
 - [`fd`](https://github.com/sharkdp/fd)
+- [`devour`](https://github.com/salman-abedin/devour)
 - `udisksctl` from [`udisks2`](https://archlinux.org/packages/extra/x86_64/udisks2/)
 - [`simple-mtpfs`](https://github.com/phatina/simple-mtpfs) *(Optional: required
 for mounting android devices via MTP)*
@@ -169,7 +170,7 @@ sudo pacman -S --needed fd fzf rofi udisks2 colorpicker sudo xwallpaper \
 ```sh
 # AUR packages via paru
 
-paru -S --needed simple-mtpfs rar
+paru -S --needed simple-mtpfs rar devour
 ```
 
 ## Configuration
