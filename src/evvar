@@ -33,7 +33,11 @@
 #    STDOUT = View contents in stdout
 #    EDITOR = View contents using evedit
 #    MENU = View contents using evmenu
- 
+# 
+# -t, --new-term
+#    Open viewer in a new terminal using evterm if using PAGER and EDITOR viewers.
+#    This option will be enabled by default if not run from an interactive shell.
+#    This option is ignored if not in a graphical environment.
 
 
 . "$EVUTILS_HOME/lib/log"
@@ -42,6 +46,7 @@
 . "$EVUTILS_HOME/lib/encode"
 
 _viewer=PAGER
+_open_new_term=1
 _dirs=""
 _archive_file=""
 
@@ -85,26 +90,39 @@ _set_archive_file() {
 # View file tree structure.
 #
 _file_tree_viewer() {
+    if ! { [ -t 0 ] || [ -p /dev/stdin ]; }; then
+        _open_new_term=0
+    fi
+
+    tmp_content_list=$(mktemp)
+    echo "$1" > "$tmp_content_list"
     case $_viewer in
         PAGER)
-            echo "$1" | less
+            if [ "$_open_new_term" -eq 0 ] && [ "$DISPLAY" ]; then
+                evterm --no-fork -- "less < '$tmp_content_list'"
+            else
+                less < "$tmp_content_list"
+            fi
             ;;
         EDITOR)
-            tmp=$(mktemp)
-            echo "$1" > "$tmp"
-            evedit --no-fork -- "$tmp"
-            rm -f -- "$tmp"
+            if [ "$_open_new_term" -eq 0 ] && [ "$DISPLAY" ]; then
+                evedit --no-fork --new-term -- "$tmp_content_list"
+            else
+                evedit --no-fork -- "$tmp_content_list"
+            fi
             ;;
         STDOUT)
-            echo "$1"
+            cat "$tmp_content_list"
             ;;
         MENU)
             if ! { [ -t 0 ] || [ -p /dev/stdin ]; }; then
-                echo "$1" | evmenu --gui --prompt "$_archive_file" >/dev/null
+                evmenu --gui --prompt "$_archive_file" >/dev/null < "$tmp_content_list"
             else
-                echo "$1" | evmenu --term --prompt "$_archive_file" >/dev/null
+                evmenu --term --prompt "$_archive_file" >/dev/null < "$tmp_content_list"
             fi
+            ;;
     esac
+    rm -f "$tmp_content_list"
 }
 
 # Format a path list to a tree structure.
@@ -184,7 +202,15 @@ main() {
                 ;;
             -v|--view|--viewer)
                 case $2 in
-                    PAGER|STDOUT|EDITOR|MENU)
+                    STDOUT)
+                        if ! { [ -t 0 ] || [ -p /dev/stdin ]; }; then
+                            log_warning "Cannot output to stdout -- not running from an interactive shell. Using PAGER viewer..."
+                            _viewer=PAGER
+                        else
+                            _viewer=STDOUT
+                        fi
+                        ;;
+                    PAGER|EDITOR|MENU)
                         _viewer=$2
                         ;;
                     *)
@@ -192,6 +218,9 @@ main() {
                         ;;
                 esac
                 shift
+                ;;
+            -t|--new-term)
+                _open_new_term=0
                 ;;
             --)
                 shift
