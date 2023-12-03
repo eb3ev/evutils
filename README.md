@@ -80,6 +80,9 @@ to use and open links.
 #### `evutils`
 - Run commmands that control the behaviour of the other evutils scripts.
 
+#### `evvar`
+- View contents of an archive file.
+
 #### `evwall`
 - A wallpaper setter.
 
@@ -141,19 +144,19 @@ for mounting android devices via MTP)*
 - `xrandr` from [`xorg-xrandr`](https://archlinux.org/packages/extra/x86_64/xorg-xrandr/)
 - `man` from [`man-db`](https://archlinux.org/packages/core/x86_64/man-db/)
 - [`tar`](https://archlinux.org/packages/core/x86_64/tar/) *(Optional: required
-for archiving or extracting `.tar` files)*
+for archiving, extracting or viewing `.tar` files)*
 - [`gzip`](https://archlinux.org/packages/core/x86_64/gzip/) *(Optional: required
-for archiving or extracting `.tar.gz` files)*
+for archiving, extracting or viewing `.tar.gz` files)*
 - [`bzip2`](https://archlinux.org/packages/core/x86_64/bzip2/) *(Optional: 
-required for archiving or extracting `.tar.bz2` files)*
+required for archiving, extracting or viewing `.tar.bz2` files)*
 - `7z` from [`p7zip`](https://archlinux.org/packages/extra/x86_64/p7zip/) 
 *(Optional: required for extracting `.7z` files)*
 - `rar` and `unrar` from [`rar`](https://aur.archlinux.org/packages/rar) *(Optional: 
-required for archiving or extracting `.rar` files)*
+required for archiving, extracting `.rar` files)*
 - [`unzip`](https://archlinux.org/packages/extra/x86_64/unzip/) *(Optional: 
-required for extracting `.zip` files)*
+required for extracting or viewing `.zip` files)*
 - [`zip`](https://archlinux.org/packages/extra/x86_64/zip/) *(Optional: required
-for arching `.zip` files)*
+for archiving `.zip` files)*
 
 ```sh
 # pacman packages

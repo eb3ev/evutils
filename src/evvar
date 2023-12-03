@@ -1,0 +1,243 @@
+#!/bin/sh
+#
+#= Evutils - Evvar
+#
+# View the contents of an archive file.
+#
+#
+#== Synopsis
+#
+# evvar [options] --file /path/to/archive/file
+# evvar [options] /path/to/archive/file
+# evvar [options] -- /path/to/archive/file
+# evvar [options] --dir /dir/path
+# evvar [options] /dir1/path:/dir2/path
+# evvar [options] -- /dir/path ...
+#
+#
+#== Options
+#
+# -f /path/to/archive/file, --file /path/to/archive/file
+#    The archive file to view. If unset, search for files using evsearch in the
+#    set --dir or current working directory.
+#
+# -d /dir/path, --dir /dir/path
+#    The directories to search for files if --file is unset. To search for multiple
+#    directories, separate directory paths with :, e.g. /dir1/path:/dir2/path, or
+#    pass multiple --dir.
+#
+# -v viewer, --view viewer, --viewer viewer
+#    How to view the file contents.
+#    Viewers:
+#    PAGER = View contents using less (Default)
+#    STDOUT = View contents in stdout
+#    EDITOR = View contents using evedit
+ 
+
+
+. "$EVUTILS_HOME/lib/log"
+. "$EVUTILS_HOME/lib/file"
+. "$EVUTILS_HOME/lib/list"
+
+_viewer=PAGER
+_dirs=""
+_archive_file=""
+
+_evmenu_opts=""
+
+# Search for files to extract.
+# @returns {path} Path to file.
+#
+_search_dirs() {
+    evsearch_opts="${_evmenu_opts} --fuzzy --hidden --type FILE --filter ZIP --prompt 'View'"
+    IFS=:
+    eval evsearch "$evsearch_opts" -- $_dirs
+    unset IFS
+}
+
+# Get the archive file to view from seasrches.
+#
+_set_archive_file() {
+    selection=""
+
+    if ! { [ -t 0 ] || [ -p /dev/stdin ]; }; then
+        _evmenu_opts="${_evmenu_opts} --gui"
+    elif ! echo "$_evmenu_opts" | grep -Fq -e "--gui"; then
+        _evmenu_opts="${_evmenu_opts} --term"
+    fi
+
+    selection=$(_search_dirs) 
+
+    if ! [ "$selection" ]; then
+        exit
+    fi
+
+    _archive_file=$(readlink -f "$selection")
+
+    if ! [ -f "$selection" ]; then
+        log_error "Invalid file -- ${_archive_file}. Exiting..."
+        exit 1
+    fi
+}
+
+# View file tree structure.
+#
+_file_tree_viewer() {
+    case $_viewer in
+        PAGER)
+            echo "$1" | less
+            ;;
+        EDITOR)
+            tmp=$(mktemp)
+            echo "$1" > "$tmp"
+            evedit --no-fork -- "$tmp"
+            rm -f -- "$tmp"
+            ;;
+        STDOUT)
+            echo "$1"
+            ;;
+    esac
+}
+
+# Format a path list to a tree structure.
+# @param {list} 1 Path list.
+# @returns {list} File list tree structure.
+#
+_format_path_list() {
+    echo "$1" \
+        | sed 's/\/$//' \
+        | sort \
+        | awk '{ n = split($0,a,"/"); for (i = 1; i < n-1; i++) printf("│   "); if (n > 1 && a[n] != "") { printf("└─ ") }; if (a[n] != "") { print a[n] } }'
+}
+
+# View the archive file.
+#
+_run() {
+    archive_contents=""
+    case $_archive_file in
+        *.tar|\
+            *.tar.bz2|*.tbz2|\
+            *.tar.gz|*.tgz|\
+            *.tar.xz|\
+            *.tar.zst)
+            archive_contents=$(tar --list -f "$_archive_file" 2>/dev/null)
+            ;;
+        *.zip)
+            archive_contents=$(unzip -l "$_archive_file" 2>/dev/null | tail -n +5 | awk -v N=4 '{sep=""; for (i = N; i <= NF; i++) { printf("%s%s",sep,$i); sep=OFS}; printf("\n")}')
+            ;;
+        *)
+            log_error "Viewing ${_archive_file} file type is unsupported. Exiting..."
+            exit 1
+            ;;
+    esac
+    if ! [ "$archive_contents" ]; then
+        log_status "Nothing to view. Exiting..."
+        exit
+    fi
+
+    archive_contents=$(_format_path_list "$archive_contents")
+    _file_tree_viewer "$archive_contents"
+}
+
+main() {
+    while [ "$1" ]; do
+        case $1 in
+            -f,--file)
+                if [ -f "$2" ]; then
+                    if ! is_archive_file "$2"; then
+                        log_error "${2} is not an archive file. Exiting..."
+                        exit 1
+                    else
+                        _archive_file=$2
+                    fi
+                else
+                    log_error "Invalid file ${2}. Exiting..."
+                    exit 1
+                fi
+                shift
+                ;;
+            -d|--dirs)
+                IFS=:
+                for dir in $2; do
+                    unset IFS
+                    if [ -d "$dir" ]; then
+                        _dirs=$(list_cat "$_dirs" "$dir" ":")
+                    else
+                        log_warning "Invalid directory ${2}. Ignoring..."
+                    fi
+                done
+                shift
+                ;;
+            -v|--view|--viewer)
+                case $2 in
+                    PAGER|STDOUT|EDITOR)
+                        _viewer=$2
+                        ;;
+                    *)
+                        log_warning "Invalid viewer ${2}. Using default viewer ${_viewer}..."
+                        ;;
+                esac
+                shift
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -?*)
+                log_warning "Unknown option ${1}. Ignoring..."
+                ;;
+            *)
+                if [ -f "$1" ]; then
+                    if ! is_archive_file "$1"; then
+                        log_error "${1} is not an archive file. Exiting..."
+                        exit 1
+                    else
+                        _archive_file=$1
+                    fi
+                else
+                    IFS=:
+                    for dir in $1; do
+                        unset IFS
+                        if [ -d "$dir" ]; then
+                            _dirs=$(list_cat "$_dirs" "$dir" ":")
+                        else
+                            log_warning "Invalid directory ${dir}. Ignoring..."
+                        fi
+                    done
+                fi
+                ;;
+        esac
+        shift
+    done
+
+    while [ "$1" ]; do
+        if [ -f "$1" ]; then
+            if ! is_archive_file "$1"; then
+                log_error "${1} is not an archive file. Exiting..."
+                exit 1
+            else
+                _archive_file=$1
+            fi
+        else
+            IFS=:
+            for dir in $1; do
+                unset IFS
+                if [ -d "$dir" ]; then
+                    _dirs=$(list_cat "$_dirs" "$dir" ":")
+                else
+                    log_warning "Invalid directory ${dir}. Ignoring..."
+                fi
+            done
+        fi
+        shift
+    done
+
+    if ! [ "$_archive_file" ]; then
+        _set_archive_file
+    fi
+
+    _run
+}
+
+main "$@"
+

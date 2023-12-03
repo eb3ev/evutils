@@ -35,6 +35,7 @@ endif
 	cp ${SRC}/evspeedtest ${TARGET}/evspeedtest
 	cp ${SRC}/evterm ${TARGET}/evterm
 	cp ${SRC}/evutils ${TARGET}/evutils
+	cp ${SRC}/evvar ${TARGET}/evvar
 	cp ${SRC}/evwall ${TARGET}/evwall
 	cp ${SRC}/evwkill ${TARGET}/evwkill
 	cp ${SRC}/evwrite ${TARGET}/evwrite
