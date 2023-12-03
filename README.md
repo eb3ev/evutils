@@ -29,7 +29,7 @@ to use and open links.
 - Select an emoji from a menu and copy it to clipboard.
 
 #### `evextract`
-- Extract archive or compressed files.
+- Extract archive files.
 
 #### `evfm`
 - A wrapper for opening a terminal file manager.
