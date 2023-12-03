@@ -123,35 +123,50 @@ variable.
 
 *The following are based on pacman and AUR packages*
 
-- [`fd`](https://github.com/sharkdp/fd)
 - [`fzf`](https://github.com/junegunn/fzf)
 - [`rofi`](https://github.com/davatorium/rofi)
-- `udisksctl` from `udisks2`
-- [`simple-mtpfs`](https://github.com/phatina/simple-mtpfs) *Optional: required
-for mounting android devices via MTP*
+- [`fd`](https://github.com/sharkdp/fd)
+- `udisksctl` from [`udisks2`](https://archlinux.org/packages/extra/x86_64/udisks2/)
+- [`simple-mtpfs`](https://github.com/phatina/simple-mtpfs) *(Optional: required
+for mounting android devices via MTP)*
 - [`colorpicker`](https://github.com/Jack12816/colorpicker)
-- `sudoedit` from `sudo`
+- `sudoedit` from [`sudo`](https://archlinux.org/packages/core/x86_64/sudo/)
 - [`xwallpaper`](https://github.com/stoeckmann/xwallpaper)
-- `speedtest` from `speedtest-cli`
+- `speedtest` from [`speedtest-cli`](https://archlinux.org/packages/extra/any/speedtest-cli/)
 - [`playerctl`](https://github.com/altdesktop/playerctl)
-- `pactl` from `libpulse`
-- `notify-send` from `libnotify`
+- `pactl` from [`libpulse`](https://archlinux.org/packages/extra/x86_64/libpulse/)
+- `notify-send` from [`libnotify`](https://archlinux.org/packages/extra/x86_64/libnotify/)
 - [`xclip`](https://github.com/astrand/xclip)
-- `wmctrl`
-- `xrandr` from `xorg-xrandr`
-- `man` from `man-db`
+- [`wmctrl`](https://archlinux.org/packages/extra/x86_64/wmctrl/)
+- `xrandr` from [`xorg-xrandr`](https://archlinux.org/packages/extra/x86_64/xorg-xrandr/)
+- `man` from [`man-db`](https://archlinux.org/packages/core/x86_64/man-db/)
+- [`tar`](https://archlinux.org/packages/core/x86_64/tar/) *(Optional: required
+for archiving or extracting `.tar` files)*
+- [`gzip`](https://archlinux.org/packages/core/x86_64/gzip/) *(Optional: required
+for archiving or extracting `.tar.gz` files)*
+- [`bzip2`](https://archlinux.org/packages/core/x86_64/bzip2/) *(Optional: 
+required for archiving or extracting `.tar.bz2` files)*
+- `7z` from [`p7zip`](https://archlinux.org/packages/extra/x86_64/p7zip/) 
+*(Optional: required for extracting `.7z` files)*
+- `rar` and `unrar` from [`rar`](https://aur.archlinux.org/packages/rar) *(Optional: 
+required for archiving or extracting `.rar` files)*
+- [`unzip`](https://archlinux.org/packages/extra/x86_64/unzip/) *(Optional: 
+required for extracting `.zip` files)*
+- [`zip`](https://archlinux.org/packages/extra/x86_64/zip/) *(Optional: required
+for arching `.zip` files)*
 
 ```sh
 # pacman packages
 
 sudo pacman -S --needed fd fzf rofi udisks2 colorpicker sudo xwallpaper \
-    speedtest-cli playerctl libpulse libnotify xclip wmctrl xorg-xrandr man-db
+    speedtest-cli playerctl libpulse libnotify xclip wmctrl xorg-xrandr man-db \
+    tar gzip bzip2 p7zip unzip zip
 ```
 
 ```sh
 # AUR packages via paru
 
-paru -S --needed simple-mtpfs
+paru -S --needed simple-mtpfs rar
 ```
 
 ## Configuration
