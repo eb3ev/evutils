@@ -48,13 +48,13 @@ _set_output_archive() {
 # Archive the files.
 #
 _run() {
+    log_status "Archiving files to ${_output_archive}..."
     case $_output_archive in
         *.tar)
             if is_not_installed "tar"; then
                 log_error "Cannot create ${_output_archive} -- tar is not installed. Exiting..."
                 exit 1
             fi
-            log_status "Archiving files to ${_output_archive}..."
             IFS=:
             tar cf "$_output_archive" $_files >/dev/null 2>&1 \
                 || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
@@ -68,7 +68,6 @@ _run() {
                 log_error "Cannot create ${_output_archive} -- gzip is not installed. Exiting..."
                 exit 1
             fi
-            log_status "Archiving and compressing files to ${_output_archive}..."
             IFS=:
             tar czf "${_output_archive}" $_files >/dev/null 2>&1 \
                 || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
@@ -82,7 +81,6 @@ _run() {
                 log_error "Cannot create ${_output_archive} -- bzip2 is not installed. Exiting..."
                 exit 1
             fi
-            log_status "Archiving and compressing files to ${_output_archive}..."
             IFS=:
             tar cjf "${_output_archive}" $_files >/dev/null 2>&1 \
                 || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
@@ -96,7 +94,6 @@ _run() {
                 log_error "Cannot create ${_output_archive} -- xz is not installed. Exiting..."
                 exit 1
             fi
-            log_status "Archiving and compressing files to ${_output_archive}..."
             IFS=:
             tar cJf "${_output_archive}" $_files >/dev/null 2>&1 \
                 || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
@@ -110,7 +107,6 @@ _run() {
                 log_error "Cannot create ${_output_archive} -- zstd is not installed. Exiting..."
                 exit 1
             fi
-            log_status "Archiving and compressing files to ${_output_archive}..."
             IFS=:
             tar -c --zstd -f "${_output_archive}" $_files >/dev/null 2>&1 \
                 || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
@@ -120,7 +116,6 @@ _run() {
                 log_error "Cannot create ${_output_archive} -- zip is not installed. Exiting..."
                 exit 1
             fi
-            log_status "Archiving and compressing files to ${_output_archive}..."
             IFS=:
             zip -qr "${_output_archive}" $_files >/dev/null 2>&1 \
                 || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
@@ -130,16 +125,17 @@ _run() {
                 log_error "Cannot create ${_output_archive} -- rar is not installed. Exiting..."
                 exit 1
             fi
-            log_status "Archiving and compressing files to ${_output_archive}..."
             IFS=:
             rar a "${_output_archive}" $_files >/dev/null 2>&1 \
                 || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
             ;;
         *)
             log_error "${_output_archive} file type is unsupported. Exiting..."
+            exit 1
             ;;
     esac
     unset IFS
+    log_status "Files archived to ${_output_archive}"
 }
 
 main() {

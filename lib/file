@@ -152,21 +152,18 @@ is_doc_file() {
 #
 is_archive_file() {
     case $1 in
-        *.tar|*.tar.xz|\
-            *.tar.bz2|*.bz2|*.tbz2|\
+        *.tar|\
             *.tar.gz|*.tgz|\
+            *.tar.bz2|*.tbz2|\
+            *.tar.xz|\
+            *.tar.zst|\
             *.rar|\
-            *.gz|\
             *.zip|\
-            *.Z|\
             *.7z|\
-            *.deb|\
-            *.tar.zst)
+            *.deb)
             return 0
             ;;
-        *) 
-            return 1
-            ;;
     esac
+    return 1
 }
 

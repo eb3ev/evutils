@@ -36,6 +36,7 @@
 . "$EVUTILS_HOME/lib/log"
 . "$EVUTILS_HOME/lib/file"
 . "$EVUTILS_HOME/lib/list"
+. "$EVUTILS_HOME/lib/program"
 
 _files=""
 _dirs=""
@@ -90,14 +91,26 @@ _run() {
             log_status "Extracting ${file}..."
         fi
         case $file in
-            *.tar|*.tar.xz)
+            *.tar)
+                if is_not_installed "tar"; then
+                    log_error "Cannot extract ${file} -- tar is not installed. Skipping..."
+                    continue
+                fi
                 if [ "$_target_dir" ]; then
                     { tar xf "$file" -C "$_target_dir" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
                 else
                     { tar xf "$file" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
                 fi
                 ;;
-            *.tar.bz2|*.bz2|*.tbz2)
+            *.tar.bz2|*.tbz2)
+                if is_not_installed "tar"; then
+                    log_error "Cannot extract ${file} -- tar is not installed. Skipping..."
+                    continue
+                fi
+                if is_not_installed "bzip2"; then
+                    log_error "Cannot extract ${file} -- bzip2 is not installed. Skipping..."
+                    continue
+                fi
                 if [ "$_target_dir" ]; then
                     { tar xjf "$file" -C "$_target_dir" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
                 else
@@ -105,33 +118,77 @@ _run() {
                 fi
                 ;;
             *.tar.gz|*.tgz)
+                if is_not_installed "tar"; then
+                    log_error "Cannot extract ${file} -- tar is not installed. Skipping..."
+                    continue
+                fi
+                if is_not_installed "gzip"; then
+                    log_error "Cannot extract ${file} -- gzip is not installed. Skipping..."
+                    continue
+                fi
                 if [ "$_target_dir" ]; then
                     { tar xzf "$file" -C "$_target_dir" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
                 else
                     { tar xzf "$file" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
                 fi
                 ;;
+            *.tar.xz)
+                if is_not_installed "tar"; then
+                    log_error "Cannot extract ${file} -- tar is not installed. Skipping..."
+                    continue
+                fi
+                if is_not_installed "xz"; then
+                    log_error "Cannot extract ${file} -- xz is not installed. Skipping..."
+                    continue
+                fi
+                if [ "$_target_dir" ]; then
+                    { tar xJf "$file" -C "$_target_dir" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
+                else
+                    { tar xJf "$file" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
+                fi
+                ;;
+            *.tar.zst)
+                if is_not_installed "tar"; then
+                    log_error "Cannot extract ${file} -- tar is not installed. Skipping..."
+                    continue
+                fi
+                if is_not_installed "zstd"; then
+                    log_error "Cannot extract ${file} -- zstd is not installed. Skipping..."
+                    continue
+                fi
+                if [ "$_target_dir" ]; then
+                    { tar -x --zstd -f "$file" -C "$_target_dir" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
+                else
+                    { tar -x --zstd -f "$file" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
+                fi
+                ;;      
             *.rar)
+                if is_not_installed "unrar"; then
+                    log_error "Cannot extract ${file} -- unrar is not installed. Skipping..."
+                    continue
+                fi
                 if [ "$_target_dir" ]; then
                     { unrar x "$file" "$_target_dir" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
                 else
                     { unrar x "$file" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
                 fi
                 ;;
-            *.gz)
-                { gzip -d "$file" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
-                ;;
             *.zip)
+                if is_not_installed "unzip"; then
+                    log_error "Cannot extract ${file} -- unzip is not installed. Skipping..."
+                    continue
+                fi
                 if [ "$_target_dir" ]; then
                     { unzip "$file" -d "$_target_dir" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
                 else
                     { unzip "$file" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
                 fi
                 ;;
-            *.Z)
-                { uncompress "$file" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
-                ;;
             *.7z)
+                if is_not_installed "7z"; then
+                    log_error "Cannot extract ${file} -- 7z is not installed. Skipping..."
+                    continue
+                fi
                 if [ "$_target_dir" ]; then
                     { 7z x "$file" -o "$_target_dir" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
                 else
@@ -139,19 +196,16 @@ _run() {
                 fi
                 ;;
             *.deb)
+                if is_not_installed "ar"; then
+                    log_error "Cannot extract ${file} -- ar is not installed. Skipping..."
+                    continue
+                fi
                 if [ "$_target_dir" ]; then
                     { ar x --output "$_target_dir" "$file" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
                 else
                     { ar x "$file" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
                 fi
                 ;;
-            *.tar.zst)
-                if [ "$_target_dir" ]; then
-                    { unzstd --output-dir-flat "$_target_dir" "$file" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
-                else
-                    { unzstd "$file" >/dev/null 2>&1 && log_status "${file} extracted."; } || log_error "Extracting ${file} failed. Skipping..."
-                fi
-                ;;      
         esac
     done
 }
