@@ -44,6 +44,7 @@
 . "$EVUTILS_HOME/lib/file"
 . "$EVUTILS_HOME/lib/list"
 . "$EVUTILS_HOME/lib/encode"
+. "$EVUTILS_HOME/lib/program"
 
 _viewer=PAGER
 _open_new_term=1
@@ -136,9 +137,59 @@ _format_path_list() {
         | awk '{ n = split($0,a,"/"); for (i = 1; i < n-1; i++) printf("│  "); if (n > 1 && a[n] != "") { printf("├──") }; if (a[n] != "") { print a[n] } }'
 }
 
+# Check if the archive program utility is installed for the archive file.
+#
+_archive_program_check() {
+    case $_archive_file in
+        *gz)
+            if is_not_installed "gzip"; then
+                log_error "Cannot view ${_archive_file} -- gzip is not installed. Exiting..."
+                exit 1
+            fi
+            ;;
+        *bz2)
+            if is_not_installed "bzip2"; then
+                log_error "Cannot view ${_archive_file} -- bzip2 is not installed. Exiting..."
+                exit 1
+            fi
+            ;;
+        *xz)
+            if is_not_installed "xz"; then
+                log_error "Cannot view ${_archive_file} -- xz is not installed. Exiting..."
+                exit 1
+            fi
+            ;;
+        *zst)
+            if is_not_installed "zstd"; then
+                log_error "Cannot view ${_archive_file} -- zstd is not installed. Exiting..."
+                exit 1
+            fi
+            ;;
+        *.tar)
+            if is_not_installed "tar"; then
+                log_error "Cannot view ${_archive_file} -- tar is not installed. Exiting..."
+                exit 1
+            fi
+            ;;
+        *.zip)
+            if is_not_installed "unzip"; then
+                log_error "Cannot view ${_archive_file} -- unzip is not installed. Exiting..."
+                exit 1
+            fi
+            ;;
+        *.rar)
+            if is_not_installed "unrar"; then
+                log_error "Cannot view ${_archive_file} -- unrar is not installed. Exiting..."
+                exit 1
+            fi
+            ;;
+    esac
+}
+
 # View the archive file.
 #
 _run() {
+    _archive_program_check
     archive_contents=""
     case $_archive_file in
         *.tar|\
