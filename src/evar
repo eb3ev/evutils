@@ -45,86 +45,94 @@ _set_output_archive() {
     fi
 }
 
-# Archive the files.
+# Check if the archive program utility is installed for the archive file.
 #
-_run() {
-    log_status "Archiving files to ${_output_archive}..."
+_archive_program_check() {
     case $_output_archive in
-        *.tar)
-            if is_not_installed "tar"; then
-                log_error "Cannot create ${_output_archive} -- tar is not installed. Exiting..."
-                exit 1
-            fi
-            IFS=:
-            tar cf "$_output_archive" $_files >/dev/null 2>&1 \
-                || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
-            ;;
-        *.tar.gz|*.tgz)
-            if is_not_installed "tar"; then
-                log_error "Cannot create ${_output_archive} -- tar is not installed. Exiting..."
-                exit 1
-            fi
+        *gz)
             if is_not_installed "gzip"; then
                 log_error "Cannot create ${_output_archive} -- gzip is not installed. Exiting..."
                 exit 1
             fi
-            IFS=:
-            tar czf "${_output_archive}" $_files >/dev/null 2>&1 \
-                || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
             ;;
-        *.tar.bz2|*.tbz2)
-            if is_not_installed "tar"; then
-                log_error "Cannot create ${_output_archive} -- tar is not installed. Exiting..."
-                exit 1
-            fi
+        *bz2)
             if is_not_installed "bzip2"; then
                 log_error "Cannot create ${_output_archive} -- bzip2 is not installed. Exiting..."
                 exit 1
             fi
-            IFS=:
-            tar cjf "${_output_archive}" $_files >/dev/null 2>&1 \
-                || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
             ;;
-        *.tar.xz)
-            if is_not_installed "tar"; then
-                log_error "Cannot create ${_output_archive} -- tar is not installed. Exiting..."
-                exit 1
-            fi
+        *xz)
             if is_not_installed "xz"; then
                 log_error "Cannot create ${_output_archive} -- xz is not installed. Exiting..."
                 exit 1
             fi
-            IFS=:
-            tar cJf "${_output_archive}" $_files >/dev/null 2>&1 \
-                || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
             ;;
-        *.tar.zst)
-            if is_not_installed "tar"; then
-                log_error "Cannot create ${_output_archive} -- tar is not installed. Exiting..."
-                exit 1
-            fi
+        *zst)
             if is_not_installed "zstd"; then
                 log_error "Cannot create ${_output_archive} -- zstd is not installed. Exiting..."
                 exit 1
             fi
-            IFS=:
-            tar -c --zstd -f "${_output_archive}" $_files >/dev/null 2>&1 \
-                || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
+            ;;
+    esac
+    case $_output_archive in
+        *.tar|*.tar.gz|*.tgz|*.tar.bz2|*.tbz2|*.tar.xz|*.tar.zst)
+            if is_not_installed "tar"; then
+                log_error "Cannot create ${_output_archive} -- tar is not installed. Exiting..."
+                exit 1
+            fi
             ;;
         *.zip)
             if is_not_installed "zip"; then
                 log_error "Cannot create ${_output_archive} -- zip is not installed. Exiting..."
                 exit 1
             fi
-            IFS=:
-            zip -qr "${_output_archive}" $_files >/dev/null 2>&1 \
-                || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
             ;;
         *.rar)
             if is_not_installed "rar"; then
                 log_error "Cannot create ${_output_archive} -- rar is not installed. Exiting..."
                 exit 1
             fi
+            ;;
+    esac
+}
+
+# Archive the files.
+#
+_run() {
+    _archive_program_check
+    log_status "Archiving files to ${_output_archive}..."
+    case $_output_archive in
+        *.tar)
+            IFS=:
+            tar cf "$_output_archive" $_files >/dev/null 2>&1 \
+                || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
+            ;;
+        *.tar.gz|*.tgz)
+            IFS=:
+            tar czf "${_output_archive}" $_files >/dev/null 2>&1 \
+                || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
+            ;;
+        *.tar.bz2|*.tbz2)
+            IFS=:
+            tar cjf "${_output_archive}" $_files >/dev/null 2>&1 \
+                || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
+            ;;
+        *.tar.xz)
+            IFS=:
+            tar cJf "${_output_archive}" $_files >/dev/null 2>&1 \
+                || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
+            ;;
+        *.tar.zst)
+            IFS=:
+            tar -c --zstd -f "${_output_archive}" $_files >/dev/null 2>&1 \
+                || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
+            ;;
+        *.zip)
+            IFS=:
+            zip -qr "${_output_archive}" $_files >/dev/null 2>&1 \
+                || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
+            ;;
+        *.rar)
             IFS=:
             rar a "${_output_archive}" $_files >/dev/null 2>&1 \
                 || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }

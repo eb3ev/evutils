@@ -165,7 +165,9 @@ _archive_program_check() {
                 exit 1
             fi
             ;;
-        *.tar)
+    esac
+    case $_archive_file in
+        *.tar|*.tar.gz|*.tgz|*.tar.bz2|*.tbz2|*.tar.xz|*.tar.zst)
             if is_not_installed "tar"; then
                 log_error "Cannot view ${_archive_file} -- tar is not installed. Exiting..."
                 exit 1
