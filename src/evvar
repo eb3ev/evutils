@@ -122,7 +122,7 @@ _file_tree_viewer() {
             fi
             ;;
     esac
-    rm -f "$tmp_content_list"
+    rm -f -- "$tmp_content_list"
 }
 
 # Format a path list to a tree structure.
@@ -133,7 +133,7 @@ _format_path_list() {
     echo "$1" \
         | sed 's/\/$//' \
         | sort \
-        | awk '{ n = split($0,a,"/"); for (i = 1; i < n-1; i++) printf("│   "); if (n > 1 && a[n] != "") { printf("├─ ") }; if (a[n] != "") { print a[n] } }'
+        | awk '{ n = split($0,a,"/"); for (i = 1; i < n-1; i++) printf("│  "); if (n > 1 && a[n] != "") { printf("├──") }; if (a[n] != "") { print a[n] } }'
 }
 
 # View the archive file.
