@@ -107,9 +107,9 @@ _file_tree_viewer() {
             ;;
         EDITOR)
             if [ "$_open_new_term" -eq 0 ] && [ "$DISPLAY" ]; then
-                evedit --no-fork --new-term -- "$tmp_content_list"
+                evedit --no-cache --no-fork --new-term -- "$tmp_content_list"
             else
-                evedit --no-fork -- "$tmp_content_list"
+                evedit --no-cache --no-fork -- "$tmp_content_list"
             fi
             ;;
         STDOUT)
