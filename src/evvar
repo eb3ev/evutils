@@ -63,7 +63,7 @@ _search_dirs() {
     unset IFS
 }
 
-# Get the archive file to view from seasrches.
+# Get the archive file to view from searches.
 #
 _set_archive_file() {
     selection=""
