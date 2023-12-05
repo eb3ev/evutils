@@ -80,20 +80,20 @@ _format_output() {
     rgb_green_percent=$(div "$rgb_green_val" 255 2)
     rgb_blue_percent=$(div "$rgb_blue_val" 255 2)
 
-    _output=$(echo "$_format" \
-        | sed "s/{HEX}/#${hex_val}/g;
+    _output=$(echo "$_format" |
+        sed "s/{HEX}/#${hex_val}/g;
             s/{hex}/${hex_val}/g;
-            s/{RGB}/rgb(${rgb_red_val}, ${rgb_green_val}, ${rgb_blue_val})/g;\
-            s/{rgb}/${rgb_red_val}, ${rgb_green_val}, ${rgb_blue_val}/g;\
-            s/{RGB%}/rgb(${rgb_red_percent}, ${rgb_green_percent}, ${rgb_blue_percent})/g;\
-            s/{rgb%}/${rgb_red_percent}, ${rgb_green_percent}, ${rgb_blue_percent}/g;\
-            s/{r}/${rgb_red_val}/g;\
-            s/{g}/${rgb_green_val}/g;\
-            s/{b}/${rgb_green_val}/g;\
-            s/{r%}/${rgb_red_percent}/g;\
-            s/{g%}/${rgb_green_percent}/g;\
-            s/{b%}/${rgb_green_percent}/g;"\
-        )
+            s/{RGB}/rgb(${rgb_red_val}, ${rgb_green_val}, ${rgb_blue_val})/g;
+            s/{rgb}/${rgb_red_val}, ${rgb_green_val}, ${rgb_blue_val}/g;
+            s/{RGB%}/rgb(${rgb_red_percent}, ${rgb_green_percent}, ${rgb_blue_percent})/g;
+            s/{rgb%}/${rgb_red_percent}, ${rgb_green_percent}, ${rgb_blue_percent}/g;
+            s/{r}/${rgb_red_val}/g;
+            s/{g}/${rgb_green_val}/g;
+            s/{b}/${rgb_green_val}/g;
+            s/{r%}/${rgb_red_percent}/g;
+            s/{g%}/${rgb_green_percent}/g;
+            s/{b%}/${rgb_green_percent}/g;"
+    )
 }
 
 # Run.
