@@ -101,39 +101,33 @@ _archive_program_check() {
 _run() {
     _archive_program_check
     log_status "Archiving files to ${_output_archive}..."
+    IFS=:
     case $_output_archive in
         *.tar)
-            IFS=:
             tar cf "$_output_archive" $_files >/dev/null 2>&1 \
                 || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
             ;;
         *.tar.gz|*.tgz)
-            IFS=:
             tar czf "${_output_archive}" $_files >/dev/null 2>&1 \
                 || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
             ;;
         *.tar.bz2|*.tbz2)
-            IFS=:
             tar cjf "${_output_archive}" $_files >/dev/null 2>&1 \
                 || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
             ;;
         *.tar.xz)
-            IFS=:
             tar cJf "${_output_archive}" $_files >/dev/null 2>&1 \
                 || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
             ;;
         *.tar.zst)
-            IFS=:
             tar -c --zstd -f "${_output_archive}" $_files >/dev/null 2>&1 \
                 || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
             ;;
         *.zip)
-            IFS=:
             zip -qr "${_output_archive}" $_files >/dev/null 2>&1 \
                 || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
             ;;
         *.rar)
-            IFS=:
             rar a "${_output_archive}" $_files >/dev/null 2>&1 \
                 || { log_error "Creating ${_output_archive} failed. Exiting..."; exit 1; }
             ;;
