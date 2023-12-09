@@ -61,7 +61,7 @@ make_executable() {
 # @returns {mime_type} The MIME type of the file.
 # 
 get_mime_type() {
-    file --mime-type "$1" -bL 2>/dev/null
+    file --mime-type -bL -- "$1" 2>/dev/null
 }
 
 # Returns true if it's a directory and false otherwise.
