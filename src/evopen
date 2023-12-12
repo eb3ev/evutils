@@ -89,7 +89,7 @@
 # --reader-oopts options, --r-oopts options
 #    Override the document reader options set in configuration with these options.
 #
-# n, --no-fork
+# --no-fork
 #    Applications are forked by default. Pass to disable.
 #
 # --dry-run
