@@ -11,6 +11,8 @@
 
 # Programs binaries that are viable as desktop applications.
 EVUTILS_DATA_DESKTOP_APPLICATIONS="$EVUTILS_HOME/lib/data/desktop-applications"
+# Programs binaries that are terminal applications.
+EVUTILS_DATA_TERMINAL_APPLICATIONS="$EVUTILS_HOME/lib/data/terminal-applications"
 
 # Returns true if the program is installed.
 # @param {program} 1 The program to check.
@@ -83,6 +85,18 @@ get_programs_from_directories() {
         IFS=:
         find -L $dirs -maxdepth 1 -type f -perm -100 -printf "%f\n" 2>/dev/null | sort -u
         unset IFS
+    fi
+}
+
+# Returns true if it's a terminal application and false otherwise.
+# @param {program} 1 The program
+# @returns {bool} True if it's a terminal application and false otherwise.
+#
+is_terminal_application() {
+    if grep -Fqx "$1" -- "$EVUTILS_DATA_TERMINAL_APPLICATIONS"; then
+        return 0
+    else
+        return 1
     fi
 }
 

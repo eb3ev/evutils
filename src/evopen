@@ -58,6 +58,9 @@
 # -p prompt, --prompt prompt
 #    Use a different prompt for evsearch. Default is "Open".
 #
+# -o, --open-with
+#    Choose a program associated with the file to open.
+#    
 # -u program, --use program
 #    Use this program to the open the file.
 #
@@ -117,6 +120,7 @@ _use_history=1
 _swallow=1
 _filters=""
 _prompt="Open"
+_get_open_with_program=1
 _use_program=""
 _use_program_opts=""
 _open_new_term=1
@@ -134,6 +138,8 @@ _dry_run=1
 _evedit_opts=""
 _evfm_opts=""
 _evmenu_opts=""
+_evterm_opts=""
+_open_with=""
 _program_cmd=""
 
 _win_swallower="devour"
@@ -162,12 +168,6 @@ _search_history() {
 #
 _set_file() {
     selection=""
-
-    if ! { [ -t 0 ] || [ -p /dev/stdin ]; }; then
-        _evmenu_opts="${_evmenu_opts} --gui"
-    elif ! echo "$_evmenu_opts" | grep -Fq -e "--gui"; then
-        _evmenu_opts="${_evmenu_opts} --term"
-    fi
 
     if [ "$_use_history" -eq 0 ]; then
         if ! [ -e "$EVOPEN_HISTFILE" ]; then
@@ -206,13 +206,64 @@ _set_file() {
     fi
 }
 
+# Get programs associated with the file.
+# @param {path} 1 File association program filter file.
+# @returns {list} Programs associated with the file that are installed.
+#
+_get_programs() {
+    sync_program_cache
+    grep -Fx -f "$1" -- "$EVUTILS_PROGRAM_CACHE"
+}
+
+# Set the program associated with the file to use.
+#
+_set_open_with() {
+    FILE_ASSOC_PREFIX="$EVUTILS_HOME/lib/file-association"
+    FILE_ASSOC_ARCHIVE="$FILE_ASSOC_PREFIX/archives"
+    FILE_ASSOC_AUD="$FILE_ASSOC_PREFIX/audios"
+    FILE_ASSOC_DIR="$FILE_ASSOC_PREFIX/directories"
+    FILE_ASSOC_DOC="$FILE_ASSOC_PREFIX/documents"
+    FILE_ASSOC_IMG="$FILE_ASSOC_PREFIX/images"
+    FILE_ASSOC_TXT="$FILE_ASSOC_PREFIX/plaintext"
+    FILE_ASSOC_VID="$FILE_ASSOC_PREFIX/videos"
+
+    if is_directory "$_file"; then
+        _open_with=$(_get_programs "$FILE_ASSOC_DIR" | eval evmenu "${_evmenu_opts}" --prompt "'Open ${_file} With'")
+    elif is_plain_text_file "$_file"; then
+        _open_with=$(_get_programs "$FILE_ASSOC_TXT" | eval evmenu "${_evmenu_opts}" --prompt "'Open ${_file##*/} With'")
+    elif is_video_file "$_file"; then
+        _open_with=$(_get_programs "$FILE_ASSOC_VID" | eval evmenu "${_evmenu_opts}" --prompt "'Open ${_file##*/} With'")
+    elif is_audio_file "$_file"; then
+        _open_with=$(_get_programs "$FILE_ASSOC_AUD" | eval evmenu "${_evmenu_opts}" --prompt "'Open ${_file##*/} With'")
+    elif is_image_file "$_file"; then
+        _open_with=$(_get_programs "$FILE_ASSOC_IMG" | eval evmenu "${_evmenu_opts}" --prompt "'Open ${_file##*/} With'")
+    elif is_doc_file "$_file"; then
+        _open_with=$(_get_programs "$FILE_ASSOC_DOC" | eval evmenu "${_evmenu_opts}" --prompt "'Open ${_file##*/} With'")
+    elif is_archive_file "$_file"; then
+        _open_with=$(_get_programs "$FILE_ASSOC_ARCHIVE" | eval evmenu "${_evmenu_opts}" --prompt "'Open ${_file##*/} With'")
+    else
+        log_error "${_file} is unsupported. Exiting..." 
+        exit 1
+    fi
+    if ! [ "$_open_with" ]; then
+        exit
+    fi
+}
+
 # Set the program command to run.
 #
 _set_program_cmd() {
     program=""
     program_opts=""
+    require_term=1
 
-    if [ "$_use_program" ]; then
+    if [ "$_get_open_with_program" -eq 0 ]; then
+        _set_open_with
+        program=$_open_with
+        if is_terminal_application "$program"; then
+            require_term=0
+        fi
+    elif [ "$_use_program" ]; then
         program=$_use_program
         program_opts=$_use_program_opts
     elif is_directory "$_file"; then
@@ -286,6 +337,8 @@ _set_program_cmd() {
         exit 1
     fi
 
+    ignore_window_swallowing=1
+
     case $program in
         TERM_EDITOR)
             _program_cmd="evedit ${_evedit_opts} -- '${_file}'"
@@ -297,10 +350,19 @@ _set_program_cmd() {
             _program_cmd="evvar -- '${_file}'"
             ;;
         *)
-            if [ "$_fork" -eq 0 ]; then
-                _program_cmd="${program} ${program_opts} '${_file}' &"
+            if [ "$require_term" -eq 0 ]; then
+                if ! { [ -t 0 ] || [ -p /dev/stdin ]; } && [ "$DISPLAY" ]; then
+                    _program_cmd="evterm ${_evterm_opts} -- \"${program} '${_file}'\""
+                else
+                    _program_cmd="${program} '${_file}'"
+                    ignore_window_swallowing=0
+                fi
             else
-                _program_cmd="${program} ${program_opts} '${_file}'"
+                if [ "$_fork" -eq 0 ]; then
+                    _program_cmd="${program} ${program_opts} '${_file}' &"
+                else
+                    _program_cmd="${program} ${program_opts} '${_file}'"
+                fi
             fi
             ;;
     esac
@@ -312,12 +374,12 @@ _set_program_cmd() {
                     TERM_EDITOR|TERM_FM|TERM_ARCHIVE_VIEWER)
                         if [ "$_open_new_term" -eq 0 ]; then
                             _program_cmd="${_win_swallower} ${_program_cmd}"
-                        # else
-                        #     log_warning "Running application in terminal. Ignoring window swallowing..."
                         fi
                         ;;
                     *)
-                        _program_cmd="${_win_swallower} ${_program_cmd}"
+                        if [ "$ignore_window_swallowing" -eq 1 ]; then
+                            _program_cmd="${_win_swallower} ${_program_cmd}"
+                        fi
                 esac
             else
                 log_warning "Window swallower (${_win_swallower}) not installed. Ignoring..."
@@ -326,7 +388,6 @@ _set_program_cmd() {
             log_warning "Ignoring window swallowing -- no window to swallow. Skipping..."
         fi
     fi
-
 }
 
 # Run the program and the command to run.
@@ -396,6 +457,9 @@ main() {
                 _prompt=$2
                 shift
                 ;;
+            -o|--open-with)
+                _get_open_with_program=0
+                ;;
             -u|--use)
                 if is_installed "$2"; then
                     _use_program=$2
@@ -460,6 +524,7 @@ main() {
                 _fork=1
                 _evedit_opts="${_evedit_opts} --no-fork"
                 _evfm_opts="${_evfm_opts} --no-fork"
+                _evterm_opts="${_evterm_opts} --no-fork"
                 ;;
             --dry-run)
                 _dry_run=0
@@ -506,6 +571,12 @@ main() {
         fi
         shift
     done
+
+    if ! { [ -t 0 ] || [ -p /dev/stdin ]; }; then
+        _evmenu_opts="${_evmenu_opts} --gui"
+    elif ! echo "$_evmenu_opts" | grep -Fq -e "--gui"; then
+        _evmenu_opts="${_evmenu_opts} --term"
+    fi
 
     _run
 }
