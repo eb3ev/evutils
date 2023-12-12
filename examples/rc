@@ -15,12 +15,20 @@ term_fm = lf
 browser = Firefox
 # The default image viewer to use.
 image_viewer = nsxiv
+# Options to pass to image viewer. 
+image_viewer_opts = ""
 # The default audio player to use.
 audio_player = mpv
+# Options to pass to audio player. 
+audio_player_opts = ""
 # The default video player to use.
 video_player = mpv
+# Options to pass to video player. 
+video_player_opts = ""
 # The default document reader to use.
 reader = zathura
+# Options to pass to the document reader. 
+reader_opts = ""
 
 
 #== Settings

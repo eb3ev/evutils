@@ -65,9 +65,29 @@
 # --term-menu
 #    Attempt to use the --term option for evmenu.
 #
-# -o options, --opts options
-#    Additional options to pass to the executed program. This will require you to
-#    know the program that will be used.
+# --image-viewer-opts options, --iv-opts options
+#    Additional options to pass to the image viewer.
+#
+# --image-viewer-oopts options, --iv-oopts options
+#    Override the image viewer options set in configuration with these options.
+#
+# --audio-player-opts options, --ap-opts options
+#    Additional options to pass to the audio player.
+#
+# --audio-player-oopts options, --ap-oopts options
+#    Override the audio player options set in configuration with these options.
+#
+# --video-player-opts options, --vp-opts options
+#    Additional options to pass to the video player.
+#
+# --video-player-oopts options, --vp-oopts options
+#    Override the video player options set in configuration with these options.
+#
+# --reader-opts options, --r-opts options
+#    Additional options to pass to the document reader.
+#
+# --reader-oopts options, --r-oopts options
+#    Override the document reader options set in configuration with these options.
 #
 # n, --no-fork
 #    Applications are forked by default. Pass to disable.
@@ -92,7 +112,14 @@ _swallow=1
 _filters=""
 _prompt="Open"
 _open_new_term=1
-_program_opts=""
+_image_viewer_opts=""
+_audio_player_opts=""
+_video_player_opts=""
+_reader_opts=""
+_override_image_viewer_opts=1
+_override_audio_player_opts=1
+_override_video_player_opts=1
+_override_reader_opts=1
 _fork=0
 _dry_run=1
 
@@ -175,6 +202,7 @@ _set_file() {
 #
 _set_program_cmd() {
     program=""
+    program_opts=""
 
     if is_directory "$_file"; then
         program=TERM_FM
@@ -189,6 +217,11 @@ _set_program_cmd() {
             exit 1
         else
             program=$EVUTILS_VIDEO_PLAYER
+            if [ "$_override_video_player_opts" -eq 0 ]; then
+                program_opts=$_video_player_opts
+            else
+                program_opts=$(list_cat "$EVUTILS_VIDEO_PLAYER_OPTS" "$_video_player_opts" " ")
+            fi
         fi
     elif is_audio_file "$_file"; then
         if ! [ "$EVUTILS_AUDIO_PLAYER" ]; then
@@ -199,6 +232,11 @@ _set_program_cmd() {
             exit 1
         else
             program=$EVUTILS_AUDIO_PLAYER
+            if [ "$_override_audio_player_opts" -eq 0 ]; then
+                program_opts=$_audio_player_opts
+            else
+                program_opts=$(list_cat "$EVUTILS_AUDIO_PLAYER_OPTS" "$_audio_player_opts" " ")
+            fi
         fi
     elif is_image_file "$_file"; then
         if ! [ "$EVUTILS_IMAGE_VIEWER" ]; then
@@ -209,6 +247,11 @@ _set_program_cmd() {
             exit 1
         else
             program=$EVUTILS_IMAGE_VIEWER
+            if [ "$_override_image_viewer_opts" -eq 0 ]; then
+                program_opts=$_image_viewer_opts
+            else
+                program_opts=$(list_cat "$EVUTILS_IMAGE_VIEWER_OPTS" "$_image_viewer_opts" " ")
+            fi
         fi
     elif is_doc_file "$_file"; then
         if ! [ "$EVUTILS_READER" ]; then
@@ -219,6 +262,11 @@ _set_program_cmd() {
             exit 1
         else
             program=$EVUTILS_READER
+            if [ "$_override_reader_opts" -eq 0 ]; then
+                program_opts=$_reader_opts
+            else
+                program_opts=$(list_cat "$EVUTILS_READER_OPTS" "$_reader_opts" " ")
+            fi
         fi
     elif is_archive_file "$_file"; then
         program=TERM_ARCHIVE_VIEWER
@@ -236,9 +284,9 @@ _set_program_cmd() {
             ;;
         *)
             if [ "$_fork" -eq 0 ]; then
-                _program_cmd="${program} ${_program_opts} '${_file}' &"
+                _program_cmd="${program} ${program_opts} '${_file}' &"
             else
-                _program_cmd="${program} ${_program_opts} '${_file}'"
+                _program_cmd="${program} ${program_opts} '${_file}'"
             fi
             ;;
     esac
@@ -339,8 +387,40 @@ main() {
                 _evedit_opts="${_evedit_opts} --new-term"
                 _evfm_opts="${_evfm_opts} --new-term"
                 ;;
-            -o|--opts)
-                _program_opts="'$2'"
+            --image-viewer-opts|--iv-opts)
+                _image_viewer_opts=$(list_cat "$_image_viewer_opts" "$2" " ")
+                shift
+                ;;
+            --image-viewer-oopts|--iv-oopts)
+                _image_viewer_opts=$(list_cat "$_image_viewer_opts" "$2" " ")
+                _override_image_viewer_opts=0
+                shift
+                ;;
+            --audio-player-opts|--ap-opts)
+                _audio_player_opts=$(list_cat "$_audio_player_opts" "$2" " ")
+                shift
+                ;;
+            --audio-player-oopts|--ap-oopts)
+                _audio_player_opts=$(list_cat "$_audio_player_opts" "$2" " ")
+                _override_audio_player_opts=0
+                shift
+                ;;
+            --video-player-opts|--vp-opts)
+                _video_player_opts=$(list_cat "$_video_player_opts" "$2" " ")
+                shift
+                ;;
+            --video-player-oopts|--vp-oopts)
+                _video_player_opts=$(list_cat "$_video_player_opts" "$2" " ")
+                _override_video_player_opts=0
+                shift
+                ;;
+            --reader-opts|--r-opts)
+                _reader_opts=$(list_cat "$_reader_opts" "$2" " ")
+                shift
+                ;;
+            --reader-oopts|--r-oopts)
+                _reader_opts=$(list_cat "$_reader_opts" "$2" " ")
+                _override_reader_opts=0
                 shift
                 ;;
             --gui-menu)

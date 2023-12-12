@@ -30,12 +30,20 @@ EVUTILS_TERM_MENU_OPTS=${EVUTILS_TERM_MENU_OPTS:-}
 EVUTILS_BROWSER=${EVUTILS_BROWSER:-}
 # The default image viewer to use.
 EVUTILS_IMAGE_VIEWER=${EVUTILS_IMAGE_VIEWER:-}
+# Options to pass to image viewer. 
+EVUTILS_IMAGE_VIEWER_OPTS=${EVUTILS_IMAGE_VIEWER_OPTS:-}
 # The default audio player to use.
 EVUTILS_AUDIO_PLAYER=${EVUTILS_AUDIO_PLAYER:-}
+# Options to pass to audio player. 
+EVUTILS_AUDIO_PLAYER_OPTS=${EVUTILS_AUDIO_PLAYER_OPTS:-}
 # The default video player to use.
 EVUTILS_VIDEO_PLAYER=${EVUTILS_VIDEO_PLAYER:-}
+# Options to pass to video player. 
+EVUTILS_VIDEO_PLAYER_OPTS=${EVUTILS_VIDEO_PLAYER_OPTS:-}
 # The default document reader to use.
 EVUTILS_READER=${EVUTILS_READER:-}
+# Options to pass to the document reader. 
+EVUTILS_READER_OPTS=${EVUTILS_READER_OPTS:-}
 # Path to bookmarks file to use.
 EVUTILS_BOOKMARKS=${EVUTILS_BOOKMARKS:-}
 # Path to screen layout setter script file.
@@ -104,14 +112,26 @@ update_config() {
             image_viewer)
                 EVUTILS_IMAGE_VIEWER=${EVUTILS_IMAGE_VIEWER:-$(eval echo "$value")}
                 ;;
+            image_viewer_opts)
+                EVUTILS_IMAGE_VIEWER_OPTS=${EVUTILS_IMAGE_VIEWER_OPTS:-$(eval echo "$value")}
+                ;;
             audio_player)
                 EVUTILS_AUDIO_PLAYER=${EVUTILS_AUDIO_PLAYER:-$(eval echo "$value")}
+                ;;
+            audio_player_opts)
+                EVUTILS_AUDIO_PLAYER_OPTS=${EVUTILS_AUDIO_PLAYER_OPTS:-$(eval echo "$value")}
                 ;;
             video_player)
                 EVUTILS_VIDEO_PLAYER=${EVUTILS_VIDEO_PLAYER:-$(eval echo "$value")}
                 ;;
+            video_player_opts)
+                EVUTILS_VIDEO_PLAYER_OPTS=${EVUTILS_VIDEO_PLAYER_OPTS:-$(eval echo "$value")}
+                ;;
             reader)
                 EVUTILS_READER=${EVUTILS_READER:-$(eval echo "$value")}
+                ;;
+            reader_opts)
+                EVUTILS_READER_OPTS=${EVUTILS_READER_OPTS:-$(eval echo "$value")}
                 ;;
             bookmarks)
                 EVUTILS_BOOKMARKS=${EVUTILS_BOOKMARKS:-$(eval echo "$value")}
