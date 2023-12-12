@@ -281,6 +281,9 @@ _set_program_cmd() {
         fi
     elif is_archive_file "$_file"; then
         program=TERM_ARCHIVE_VIEWER
+    else
+        log_error "${_file} is unsupported. Exiting..." 
+        exit 1
     fi
 
     case $program in
