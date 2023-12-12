@@ -58,6 +58,12 @@
 # -p prompt, --prompt prompt
 #    Use a different prompt for evsearch. Default is "Open".
 #
+# -u program, --use program
+#    Use this program to the open the file.
+#
+# --use-opts options, --u-opts options
+#    Options to pass to the program passed in --use.
+#
 # --gui-menu
 #    Attempt to use the --gui option for evmenu. If not in a graphical environment,
 #    terminal menu is used.
@@ -111,6 +117,8 @@ _use_history=1
 _swallow=1
 _filters=""
 _prompt="Open"
+_use_program=""
+_use_program_opts=""
 _open_new_term=1
 _image_viewer_opts=""
 _audio_player_opts=""
@@ -204,7 +212,10 @@ _set_program_cmd() {
     program=""
     program_opts=""
 
-    if is_directory "$_file"; then
+    if [ "$_use_program" ]; then
+        program=$_use_program
+        program_opts=$_use_program_opts
+    elif is_directory "$_file"; then
         program=TERM_FM
     elif is_plain_text_file "$_file"; then
         program=TERM_EDITOR
@@ -380,6 +391,19 @@ main() {
                 ;;
             -p|--prompt)
                 _prompt=$2
+                shift
+                ;;
+            -u|--use)
+                if is_installed "$2"; then
+                    _use_program=$2
+                else
+                    log_error "${2} is not installed. Exiting..."
+                    exit 1
+                fi
+                shift
+                ;;
+            --use-opts|--u-opts)
+                _use_program_opts=$2
                 shift
                 ;;
             -t|--new-term)
