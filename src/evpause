@@ -19,6 +19,7 @@
    
 
 . "$EVUTILS_HOME/lib/log"
+. "$EVUTILS_HOME/lib/std"
 . "$EVUTILS_HOME/lib/media"
 . "$EVUTILS_HOME/lib/list"
 
@@ -28,48 +29,69 @@ _STOP_ALL_OPT=" Stop All"
 
 _stop=1
 
+_player_list=""
 _player=""
 
-# Set the player to control.
+# Set the player list.
 #
-_set_player() {
+_set_player_list() {
     players=$(get_running_players)
 
     if ! [ "$players" ]; then
         log_status "No running players. Exiting..."
         exit
+    elif [ "$(list_len --list "$players")" -eq 1 ]; then
+        _player=$players
+        return
     fi
 
-    if [ "$(list_len --list "$players")" -eq 1 ]; then
-        _player=$players
+    IFS=$CHAR_NL
+    for player in $players; do
+        unset IFS
+        metadata_title=$(playerctl --player="$player" metadata --format "{{title}}")
+        _player_list=$(list_cat "$_player_list" "${player}${metadata_title:+ -- $metadata_title}")
+    done
+
+    if [ "$_stop" -eq 0 ]; then
+        _player_list=$(list_cat "$_player_list" "$_STOP_ALL_OPT")
+    else
+        _player_list=$(list_cat "$_player_list" "$_PLAY_ALL_OPT")
+        _player_list=$(list_cat "$_player_list" "$_PAUSE_ALL_OPT")
+    fi
+
+}
+
+# Set the player to control.
+#
+_set_player() {
+    if [ "$_player" ]; then
         return
     fi
 
     prompt=""
 
     if [ "$_stop" -eq 0 ]; then
-        players=$(list_cat "$players" "$_STOP_ALL_OPT")
         prompt=""
     else
-        players=$(list_cat "$players" "$_PLAY_ALL_OPT")
-        players=$(list_cat "$players" "$_PAUSE_ALL_OPT")
         prompt=" "
     fi
 
+    selection=""
     if ! { [ -t 0 ] || [ -p /dev/stdin ]; }; then
-        _player=$(echo "$players" | evmenu --gui --prompt "$prompt")
+        selection=$(echo "$_player_list" | evmenu --gui --prompt "$prompt")
     else
-        _player=$(echo "$players" | evmenu --term --prompt "$prompt")
+        selection=$(echo "$_player_list" | evmenu --term --prompt "$prompt")
     fi
-
-    if ! [ "$_player" ]; then
+    if ! [ "$selection" ]; then
         exit
     fi
+    _player=${selection%% -- *}
 }
 
 # Control the player.
 #
 _run() {
+    echo "$_player"
     if [ "$_stop" -eq 0 ]; then
         case $_player in
             "$_STOP_ALL_OPT")
@@ -106,6 +128,7 @@ main() {
         shift
     done
 
+    _set_player_list
     _set_player
     _run
 }
