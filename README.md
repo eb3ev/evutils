@@ -25,6 +25,9 @@ to use and open links.
 #### `evclip`
 - Copy text, path to a file or the current working directory to clipboard.
 
+#### `evdl`
+- A wrapper for using using `yt-dlp`.
+
 #### `evemoji`
 - Select an emoji from a menu and copy it to clipboard.
 
@@ -159,6 +162,10 @@ required for extracting or viewing `.zip` files)*
 - [`zip`](https://archlinux.org/packages/extra/x86_64/zip/) *(Optional: required
 for archiving `.zip` files)*
 
+*The following are based on pip packages*
+
+- [`yt-dlp`](https://github.com/yt-dlp/yt-dlp)
+
 ```sh
 # pacman packages
 
@@ -171,6 +178,12 @@ sudo pacman -S --needed fd fzf rofi udisks2 colorpicker sudo xwallpaper \
 # AUR packages via paru
 
 paru -S --needed simple-mtpfs rar devour
+```
+
+```sh
+# pip packages
+
+pipx install yt-dlp
 ```
 
 ## Configuration

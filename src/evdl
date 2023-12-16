@@ -1,0 +1,179 @@
+#!/bin/sh
+#
+#= Evutils - Evdl
+#
+# Wrapper for yt-dlp
+#
+#
+#== Synopsis
+#
+# evdl [options] --url URL
+# evdl [options] URL
+# evdl [options] -- URL
+#
+#
+#== Options
+#
+# -u URL, --url URL
+#    The URL of the video file to download.
+#
+# -d /dir/path, --dir /dir/path
+#    The directory to download to. By default it will download to the downloads
+#    folder set by xdg-user-dir and if unset to $HOME/downloads or $HOME/Downloads,
+#    and if these are unset, it will just download to the current working directory.
+
+
+
+. "$EVUTILS_HOME/lib/log"
+. "$EVUTILS_HOME/lib/program"
+. "$EVUTILS_HOME/lib/browser"
+. "$EVUTILS_HOME/lib/clipboard"
+. "$EVUTILS_HOME/lib/list"
+
+_download_to=""
+_url=""
+_format_code=""
+
+# Pre-checks.
+#
+_pre() {
+    if ! { [ -t 0 ] || [ -p /dev/stdin ]; }; then
+        exit 1
+    fi
+    if is_not_installed "yt-dlp"; then
+        log_error "yt-dlp is not installed. Exiting..."
+        exit 1
+    fi
+}
+
+# Set the directory to download to.
+#
+_set_target_dir() {
+    if [ "$_download_to" ]; then
+        return
+    fi
+
+    _download_to=$(xdg-user-dir DOWNLOAD 2>/dev/null)
+    if [ -d "$_download_to" ]; then
+        return
+    fi
+    _download_to="$HOME/downloads"
+    if [ -d "$_download_to" ]; then
+        return
+    fi
+    _download_to="$HOME/Downloads"
+    if [ -d "$_download_to" ]; then
+        return
+    fi
+    _download_to=$(pwd)
+}
+
+# Set the URL to use from the clipboard if available.
+#
+_set_url() {
+    clipboard=$(get_clipboard)
+
+    if ! [ "$clipboard" ]; then
+        log_error "Clipboard is empty. Exiting..."
+        exit 1
+    elif ! is_url "$clipboard"; then
+        log_error "Invalid URL ${clipboard}. Exiting..."
+        exit 1
+    fi
+
+    _url=$clipboard
+}
+
+# Prompt and set the format code to use.
+#
+_set_format_code() {
+    tmp=$(mktemp)
+    yt-dlp -F "$_url" > "$tmp" \
+        || { rm -f -- "$tmp"; log_error "Running yt-dlp failed. Exiting..."; exit 1; }
+    formats=$(cat "$tmp")
+    formats=${formats##*:
+}
+    rm -f -- "$tmp"
+    format_headers=$(echo "$formats" | head -n 2)
+    formats=$(echo "$formats" | tail -n +3)
+
+    selection=$(echo "$formats" | EVUTILS_TERM_MENU_OPTS="${EVUTILS_TERM_MENU_OPTS} --header='${format_headers}'" evmenu --term --prompt "Set Format")
+
+    if ! [ "$selection" ]; then
+        exit
+    fi
+
+    _format_code=${selection%% *}
+}
+
+# Execute download.
+#
+_run() {
+    _set_format_code
+
+    { cd "$_download_to" && yt-dlp --quiet --progress -f "$_format_code" "$_url" \
+        && log_status "Download complete. Downloaded to ${_download_to}."; } \
+        || log_error "Download failed."
+}
+
+main() {
+    _pre
+
+    while [ "$1" ]; do
+        case $1 in
+            -u|--url)
+                if is_url "$2"; then
+                    _url=$2
+                else
+                    log_error "Invalid URL ${2}. Exiting..."
+                    exit 1
+                fi
+                shift
+                ;;
+            -d|--dir)
+                if ! [ -d "$2" ]; then
+                    log_error "Invalid directory ${2}. Exiting..."
+                    exit 1
+                fi
+                _download_to=$2
+                shift
+                ;;
+            --)
+                shift
+                break
+                ;;
+            -?*)
+                log_warning "Unknown option ${1}. Ignoring..."
+                ;;
+            *)
+                if is_url "$1"; then
+                    _url=$1
+                else
+                    log_error "Invalid URL ${1}. Exiting..."
+                    exit 1
+                fi
+                ;;
+        esac
+    done
+
+    while [ "$1" ]; do
+        if is_url "$1"; then
+            _url=$1
+        else
+            log_error "Invalid URL ${1}. Exiting..."
+            exit 1
+        fi
+        shift
+    done
+
+    _set_target_dir
+
+    if ! [ "$_url" ]; then
+        _set_url
+    fi
+
+    _run
+}
+
+main "$@"
+
