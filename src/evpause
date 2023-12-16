@@ -29,12 +29,11 @@ _STOP_ALL_OPT=" Stop All"
 
 _stop=1
 
-_player_list=""
 _player=""
 
-# Set the player list.
+# Set the player to control.
 #
-_set_player_list() {
+_set_player() {
     players=$(get_running_players)
 
     if ! [ "$players" ]; then
@@ -45,42 +44,29 @@ _set_player_list() {
         return
     fi
 
+    new_players=""
     IFS=$CHAR_NL
     for player in $players; do
         unset IFS
         metadata_title=$(playerctl --player="$player" metadata --format "{{title}}")
-        _player_list=$(list_cat "$_player_list" "${player}${metadata_title:+ -- $metadata_title}")
+        new_players=$(list_cat "$new_players" "${player}${metadata_title:+ -- $metadata_title}")
     done
 
-    if [ "$_stop" -eq 0 ]; then
-        _player_list=$(list_cat "$_player_list" "$_STOP_ALL_OPT")
-    else
-        _player_list=$(list_cat "$_player_list" "$_PLAY_ALL_OPT")
-        _player_list=$(list_cat "$_player_list" "$_PAUSE_ALL_OPT")
-    fi
-
-}
-
-# Set the player to control.
-#
-_set_player() {
-    if [ "$_player" ]; then
-        return
-    fi
-
     prompt=""
-
     if [ "$_stop" -eq 0 ]; then
+        new_players=$(list_cat "$new_players" "$_STOP_ALL_OPT")
         prompt=""
     else
+        new_players=$(list_cat "$new_players" "$_PLAY_ALL_OPT")
+        new_players=$(list_cat "$new_players" "$_PAUSE_ALL_OPT")
         prompt=" "
     fi
 
     selection=""
     if ! { [ -t 0 ] || [ -p /dev/stdin ]; }; then
-        selection=$(echo "$_player_list" | evmenu --gui --prompt "$prompt")
+        selection=$(echo "$new_players" | evmenu --gui --prompt "$prompt")
     else
-        selection=$(echo "$_player_list" | evmenu --term --prompt "$prompt")
+        selection=$(echo "$new_players" | evmenu --term --prompt "$prompt")
     fi
     if ! [ "$selection" ]; then
         exit
@@ -91,7 +77,6 @@ _set_player() {
 # Control the player.
 #
 _run() {
-    echo "$_player"
     if [ "$_stop" -eq 0 ]; then
         case $_player in
             "$_STOP_ALL_OPT")
@@ -128,7 +113,6 @@ main() {
         shift
     done
 
-    _set_player_list
     _set_player
     _run
 }
