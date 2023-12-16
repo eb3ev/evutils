@@ -1,4 +1,10 @@
+<div align="center">
+
 # evutils
+
+[Features](#features) • [Installation](#installation) • [Configuration](#configuration)
+
+</div>
 
 Utilitiy POSIX shell scripts for linux.
 
@@ -6,6 +12,14 @@ These scripts serve as a wrapper for several programs to add additional
 functionality or to improve ease of use.
 
 Documentation can be found within the scripts inside `src`.
+
+
+## Table of Contents
+
+- [Features](#features)
+- [Installation](#installation)
+    * [Dependencies](#dependencies)
+- [Configuration](#configuration)
 
 ## Features
 
@@ -132,7 +146,8 @@ variable.
 - [`fzf`](https://github.com/junegunn/fzf)
 - [`rofi`](https://github.com/davatorium/rofi)
 - [`fd`](https://github.com/sharkdp/fd)
-- [`devour`](https://github.com/salman-abedin/devour)
+- [`devour`](https://github.com/salman-abedin/devour) *(Optional: required for 
+window swallowing)*
 - `udisksctl` from [`udisks2`](https://archlinux.org/packages/extra/x86_64/udisks2/)
 - [`simple-mtpfs`](https://github.com/phatina/simple-mtpfs) *(Optional: required
 for mounting android devices via MTP)*
@@ -147,16 +162,16 @@ for mounting android devices via MTP)*
 - [`wmctrl`](https://archlinux.org/packages/extra/x86_64/wmctrl/)
 - `xrandr` from [`xorg-xrandr`](https://archlinux.org/packages/extra/x86_64/xorg-xrandr/)
 - `man` from [`man-db`](https://archlinux.org/packages/core/x86_64/man-db/)
-- [`tar`](https://archlinux.org/packages/core/x86_64/tar/) *(Optional: required
-for archiving, extracting or viewing `.tar` files)*
-- [`gzip`](https://archlinux.org/packages/core/x86_64/gzip/) *(Optional: required
-for archiving, extracting or viewing `.tar.gz` files)*
+- [`tar`](https://archlinux.org/packages/core/x86_64/tar/)
+- [`gzip`](https://archlinux.org/packages/core/x86_64/gzip/)
 - [`bzip2`](https://archlinux.org/packages/core/x86_64/bzip2/) *(Optional: 
 required for archiving, extracting or viewing `.tar.bz2` files)*
 - `7z` from [`p7zip`](https://archlinux.org/packages/extra/x86_64/p7zip/) 
 *(Optional: required for extracting `.7z` files)*
 - `rar` and `unrar` from [`rar`](https://aur.archlinux.org/packages/rar) *(Optional: 
 required for archiving, extracting or viewing `.rar` files)*
+    * Or just `unrar` from [`unrar`](https://archlinux.org/packages/extra/x86_64/unrar/)
+    *(Optional: required for extracting or viewing `.rar` files)*
 - [`unzip`](https://archlinux.org/packages/extra/x86_64/unzip/) *(Optional: 
 required for extracting or viewing `.zip` files)*
 - [`zip`](https://archlinux.org/packages/extra/x86_64/zip/) *(Optional: required
@@ -169,13 +184,17 @@ for archiving `.zip` files)*
 ```sh
 # pacman packages
 
-sudo pacman -S --needed fd fzf rofi udisks2 colorpicker sudo xwallpaper \
-    speedtest-cli playerctl libpulse libnotify xclip wmctrl xorg-xrandr man-db \
-    tar gzip bzip2 p7zip unzip zip
+sudo pacman -S --needed fd fzf rofi udisks2 colorpicker sudo xwallpaper speedtest-cli playerctl libpulse libnotify xclip wmctrl xorg-xrandr man-db tar gzip
 ```
 
 ```sh
-# AUR packages via paru
+# Optional pacman packages
+
+sudo pacman -S --needed bzip2 p7zip unzip zip
+```
+
+```sh
+# Optional AUR packages via paru
 
 paru -S --needed simple-mtpfs rar devour
 ```
