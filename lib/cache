@@ -17,7 +17,7 @@ EVLAUNCH_HISTFILE="$EVUTILS_CACHE_HOME/evlaunch-history"
 # Cache of eved's recently opened files.
 EVED_HISTFILE="$EVUTILS_CACHE_HOME/eved-history"
 # Cache of evop's recently opened files.
-EVOP="$EVUTILS_CACHE_HOME/evop-history"
+EVOP_HISTFILE="$EVUTILS_CACHE_HOME/evop-history"
 # Cache of evbookarks's recently opened bookmarks.
 EVBM_HISTFILE="$EVUTILS_CACHE_HOME/evbm-history"
 # Cache of evemoji's recently used emojis.
