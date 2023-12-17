@@ -1,15 +1,15 @@
 #!/bin/sh
 #
-#= Evutils
+#= Evutils - Evctl
 #
 # Evutils controller.
 #
 #
 #== Synopsis
 #
-# evutils [options] --cmd command ...
-# evutils [options] command ...
-# evutils [options] -- command ...
+# evctl [options] --cmd command ...
+# evctl [options] command ...
+# evctl [options] -- command ...
 #
 #
 #== Options

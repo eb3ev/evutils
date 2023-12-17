@@ -94,7 +94,7 @@ to use and open links.
 #### `evterm`
 - A wrapper for opening a terminal.
 
-#### `evutils`
+#### `evctl`
 - Run commmands that control the behaviour of the other evutils scripts.
 
 #### `evvar`
