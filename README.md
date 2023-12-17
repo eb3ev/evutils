@@ -39,6 +39,9 @@ to use and open links.
 #### `evclip`
 - Copy text, path to a file or the current working directory to clipboard.
 
+#### `evctl`
+- Run commmands that control the behaviour of the other evutils scripts.
+
 #### `evdl`
 - A wrapper for using using `yt-dlp`.
 
@@ -47,9 +50,6 @@ to use and open links.
 
 #### `evemoji`
 - Select an emoji from a menu and copy it to clipboard.
-
-#### `evxar`
-- Extract archive files.
 
 #### `evfm`
 - A wrapper for opening a terminal file manager.
@@ -85,20 +85,17 @@ to use and open links.
 #### `evrn`
 - A useful way to rename a file or multiple files in a terminal editor.
 
-#### `evsl`
-- A wrapper for setting the X screen layout.
-
 #### `evsearch`
 - Search for files.
+
+#### `evsl`
+- A wrapper for setting the X screen layout.
 
 #### `evspeedtest`
 - A wrapper for getting your network speed info using `speedtest`.
 
 #### `evterm`
 - A wrapper for opening a terminal.
-
-#### `evctl`
-- Run commmands that control the behaviour of the other evutils scripts.
 
 #### `evvar`
 - View contents of an archive file.
@@ -108,6 +105,9 @@ to use and open links.
 
 #### `evwkill`
 - Kill windows.
+
+#### `evxar`
+- Extract archive files.
 
 #### `evwrite`
 - Write text inside a terminal editor and have it's contents copied to clipboard.
