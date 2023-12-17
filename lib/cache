@@ -19,7 +19,7 @@ EVED_HISTFILE="$EVUTILS_CACHE_HOME/eved-history"
 # Cache of evopen's recently opened files.
 EVOPEN_HISTFILE="$EVUTILS_CACHE_HOME/evopen-history"
 # Cache of evbookarks's recently opened bookmarks.
-EVBOOKMARKS_HISTFILE="$EVUTILS_CACHE_HOME/evbookmarks-history"
+EVBM_HISTFILE="$EVUTILS_CACHE_HOME/evbm-history"
 # Cache of evemoji's recently used emojis.
 EVEMOJI_HISTFILE="$EVUTILS_CACHE_HOME/evemoji-history"
 
@@ -75,11 +75,11 @@ clear_evopen_hist() {
     fi
 }
 
-# Clear evbookmarks's cache.
+# Clear evbm's cache.
 #
-clear_evbookmarks_hist() {
-    if [ -f "$EVBOOKMARKS_HISTFILE" ]; then
-        printf "" > "$EVBOOKMARKS_HISTFILE"
+clear_evbm_hist() {
+    if [ -f "$EVBM_HISTFILE" ]; then
+        printf "" > "$EVBM_HISTFILE"
     fi
 }
 
@@ -97,7 +97,7 @@ clear_history() {
     clear_evlaunch_hist
     clear_eved_hist
     clear_evopen_hist
-    clear_evbookmarks_hist
+    clear_evbm_hist
     clear_evemoji_hist
 }
 
@@ -109,7 +109,7 @@ clear_cache() {
     clear_evlaunch_hist
     clear_eved_hist
     clear_evopen_hist
-    clear_evbookmarks_hist
+    clear_evbm_hist
     clear_evemoji_hist
 }
 

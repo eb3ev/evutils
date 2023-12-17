@@ -55,7 +55,7 @@ gui_menu_opts = ""
 term_menu_opts = ""
 
 
-#== Bookmarks - evbookmarks
+#== Bookmarks - evbm
 
 # Path to bookmarks file to use.
 bookmarks = "${XDG_CONFIG_HOME:-$HOME/.config}/evutils/bookmarks"

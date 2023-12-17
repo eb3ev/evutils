@@ -8,7 +8,7 @@
 #
 #== Synopsis
 #
-# evbookmarks [options]
+# evbm [options]
 #
 #
 #== Options
@@ -78,14 +78,14 @@ _get_bookmarks() {
     bookmarks=$(get_keys --file "$EVUTILS_BOOKMARKS")
 
     if [ "$_use_history" -eq 0 ]; then
-        if ! [ -e "$EVBOOKMARKS_HISTFILE" ]; then
+        if ! [ -e "$EVBM_HISTFILE" ]; then
             create_cache_dir
-            get_keys --file "$EVUTILS_BOOKMARKS" > "$EVBOOKMARKS_HISTFILE"
+            get_keys --file "$EVUTILS_BOOKMARKS" > "$EVBM_HISTFILE"
         fi
 
-        sync_list_with_list "$EVBOOKMARKS_HISTFILE" "$bookmarks"
+        sync_list_with_list "$EVBM_HISTFILE" "$bookmarks"
 
-        bookmarks=$(cat "$EVBOOKMARKS_HISTFILE")
+        bookmarks=$(cat "$EVBM_HISTFILE")
     fi
 
     echo "$bookmarks"
@@ -128,7 +128,7 @@ _run() {
         fi
     else
         if [ "$_use_history" -eq 0 ]; then
-            move_to_top --file "$EVBOOKMARKS_HISTFILE" -- "$bookmark"
+            move_to_top --file "$EVBM_HISTFILE" -- "$bookmark"
         fi
         if [ "$_copy_url" -eq 0 ]; then
             eval set_clipboard -- "$bookmark_urls"

@@ -13,7 +13,7 @@ endif
 	@echo ":: evutils: Copying scripts from ${SRC} to ${TARGET}..."
 	cp ${SRC}/evar ${TARGET}/evar
 	cp ${SRC}/evaudio ${TARGET}/evaudio
-	cp ${SRC}/evbookmarks ${TARGET}/evbookmarks
+	cp ${SRC}/evbm ${TARGET}/evbm
 	cp ${SRC}/evbrowser ${TARGET}/evbrowser
 	cp ${SRC}/evclip ${TARGET}/evclip
 	cp ${SRC}/evdl ${TARGET}/evdl

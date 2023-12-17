@@ -29,7 +29,7 @@ Documentation can be found within the scripts inside `src`.
 #### `evaudio`
 - Set the audio output to use, using a menu.
 
-#### `evbookmarks`
+#### `evbm`
 - Select and open a bookmarked link into a browser.
 
 #### `evbrowser`
