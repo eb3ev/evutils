@@ -57,7 +57,7 @@ to use and open links.
 #### `evfm`
 - A wrapper for opening a terminal file manager.
 
-#### `evlaunch`
+#### `evl`
 - Launch executables found in `PATH` using a menu.
 
 #### `evman`

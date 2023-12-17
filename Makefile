@@ -22,7 +22,7 @@ endif
 	cp ${SRC}/eved ${TARGET}/eved
 	cp ${SRC}/evemoji ${TARGET}/evemoji
 	cp ${SRC}/evfm ${TARGET}/evfm
-	cp ${SRC}/evlaunch ${TARGET}/evlaunch
+	cp ${SRC}/evl ${TARGET}/evl
 	cp ${SRC}/evman ${TARGET}/evman
 	cp ${SRC}/evmenu ${TARGET}/evmenu
 	cp ${SRC}/evmk ${TARGET}/evmk

@@ -1,13 +1,13 @@
 #!/bin/sh
 #
-#= Evutils - Evlaunch
+#= Evutils - Evl
 #
 # Launch installed programs through evmenu.
 #
 #
 #== Synopsis
 #
-# evlaunch [options]
+# evl [options]
 #
 #== Options
 #
@@ -56,22 +56,22 @@ _get_programs() {
     fi
 
     if [ "$_use_history" -eq 0 ]; then
-        if ! [ -e "$EVLAUNCH_HISTFILE" ]; then
+        if ! [ -e "$EVL_HISTFILE" ]; then
             create_cache_dir
             if [ "$_show_all_programs" -eq 0 ]; then
-                cp "$EVUTILS_PROGRAM_CACHE" "$EVLAUNCH_HISTFILE"
+                cp "$EVUTILS_PROGRAM_CACHE" "$EVL_HISTFILE"
             else
-                echo "$programs" > "$EVLAUNCH_HISTFILE"
+                echo "$programs" > "$EVL_HISTFILE"
             fi
         fi
 
         if [ "$_show_all_programs" -eq 0 ]; then
-            sync_list_with_list "$EVLAUNCH_HISTFILE" "$EVUTILS_PROGRAM_CACHE"
+            sync_list_with_list "$EVL_HISTFILE" "$EVUTILS_PROGRAM_CACHE"
         else
-            sync_list_with_list "$EVLAUNCH_HISTFILE" "$programs"
+            sync_list_with_list "$EVL_HISTFILE" "$programs"
         fi
 
-        programs=$(cat "$EVLAUNCH_HISTFILE")
+        programs=$(cat "$EVL_HISTFILE")
     fi
 
     echo "$programs"
@@ -103,7 +103,7 @@ _run() {
         fi
     else
         if [ "$_use_history" -eq 0 ]; then
-            move_to_top --file "$EVLAUNCH_HISTFILE" -- "$program"
+            move_to_top --file "$EVL_HISTFILE" -- "$program"
         fi
         if [ "$_fork" -eq 0 ]; then
             eval "$program &"

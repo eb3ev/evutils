@@ -12,8 +12,8 @@ EVUTILS_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}/evutils"
 EVUTILS_LOGS="$EVUTILS_CACHE_HOME/log"
 # Cache of installed binaries in the system.
 EVUTILS_PROGRAM_CACHE="$EVUTILS_CACHE_HOME/programs"
-# Cache of evlaunch's recently launched programs.
-EVLAUNCH_HISTFILE="$EVUTILS_CACHE_HOME/evlaunch-history"
+# Cache of evl's recently launched programs.
+EVL_HISTFILE="$EVUTILS_CACHE_HOME/evl-history"
 # Cache of eved's recently opened files.
 EVED_HISTFILE="$EVUTILS_CACHE_HOME/eved-history"
 # Cache of evop's recently opened files.
@@ -51,11 +51,11 @@ clear_program_cache() {
     fi
 }
 
-# Clear evlaunch's cache.
+# Clear evl's cache.
 #
-clear_evlaunch_hist() {
-    if [ -f "$EVLAUNCH_HISTFILE" ]; then
-        printf "" > "$EVLAUNCH_HISTFILE"
+clear_evl_hist() {
+    if [ -f "$EVL_HISTFILE" ]; then
+        printf "" > "$EVL_HISTFILE"
     fi
 }
 
@@ -94,7 +94,7 @@ clear_evemoji_hist() {
 # Clear all evutils history.
 #
 clear_history() {
-    clear_evlaunch_hist
+    clear_evl_hist
     clear_eved_hist
     clear_evop_hist
     clear_evbm_hist
@@ -106,7 +106,7 @@ clear_history() {
 clear_cache() {
     clear_logs
     clear_program_cache
-    clear_evlaunch_hist
+    clear_evl_hist
     clear_eved_hist
     clear_evop_hist
     clear_evbm_hist
