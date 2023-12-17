@@ -79,7 +79,7 @@ to use and open links.
 #### `evpip`
 - Select and pick a colour from the screen.
 
-#### `evrename`
+#### `evrn`
 - A useful way to rename a file or multiple files in a terminal editor.
 
 #### `evscreen`

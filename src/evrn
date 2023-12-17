@@ -1,15 +1,15 @@
 #!/bin/sh
 #
-#= Evutils - Evremame
+#= Evutils - Evrn
 #
 # Rename files / directories using a terminal editor.
 #
 #
 #== Synopsis
 #
-# evrename [options] --file file ...
-# evrename [options] file ...
-# evrename [options] -- file ...
+# evrn [options] --file file ...
+# evrn [options] file ...
+# evrn [options] -- file ...
 #
 #
 #== Options

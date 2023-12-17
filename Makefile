@@ -30,7 +30,7 @@ endif
 	cp ${SRC}/evpass ${TARGET}/evpass
 	cp ${SRC}/evpause ${TARGET}/evpause
 	cp ${SRC}/evpip ${TARGET}/evpip
-	cp ${SRC}/evrename ${TARGET}/evrename
+	cp ${SRC}/evrn ${TARGET}/evrn
 	cp ${SRC}/evscreen ${TARGET}/evscreen
 	cp ${SRC}/evsearch ${TARGET}/evsearch
 	cp ${SRC}/evspeedtest ${TARGET}/evspeedtest
