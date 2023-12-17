@@ -49,7 +49,6 @@ lomath
 loweb
 lowriter
 lxterminal
-soffice
 lxappearance
 mysql-workbench
 nautilus
@@ -58,6 +57,7 @@ pavucontrol
 pcmanfm
 qutebrowser
 screenkey
+soffice
 st
 synergy
 terminator
