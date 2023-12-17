@@ -36,11 +36,11 @@ Documentation can be found within the scripts inside `src`.
 - A wrapper for opening browsers. This allows for easily switching which browser
 to use and open links.
 
-#### `evclip`
-- Copy text, path to a file or the current working directory to clipboard.
-
 #### `evcolp`
 - Select and pick a colour from the screen.
+
+#### `evcp`
+- Copy text, path to a file or the current working directory to clipboard.
 
 #### `evctl`
 - Run commmands that control the behaviour of the other evutils scripts.

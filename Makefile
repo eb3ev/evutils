@@ -15,8 +15,8 @@ endif
 	cp ${SRC}/evar ${TARGET}/evar
 	cp ${SRC}/evbm ${TARGET}/evbm
 	cp ${SRC}/evbrowser ${TARGET}/evbrowser
-	cp ${SRC}/evclip ${TARGET}/evclip
 	cp ${SRC}/evcolp ${TARGET}/evcolp
+	cp ${SRC}/evcp ${TARGET}/evcp
 	cp ${SRC}/evctl ${TARGET}/evctl
 	cp ${SRC}/evdl ${TARGET}/evdl
 	cp ${SRC}/eved ${TARGET}/eved

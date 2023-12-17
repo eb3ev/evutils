@@ -1,15 +1,15 @@
 #!/bin/sh
 #
-#= Evutils - Evclip
+#= Evutils - Evcp
 #
 # Copy to clipboard.
 #
 #
 #== Synopsis
 #
-# evclip [options] --string string ...
-# evclip [options] string ...
-# evclip [options] -- string ...
+# evcp [options] --string string ...
+# evcp [options] string ...
+# evcp [options] -- string ...
 #
 #
 #== Options
