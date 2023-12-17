@@ -78,9 +78,9 @@ _run_editor() {
         exit 1
     fi
     if [ "$_editor" ]; then
-        evedit --no-cache --editor "$_editor" -- "$_new_files"
+        eved --no-cache --editor "$_editor" -- "$_new_files"
     else
-        evedit --no-cache -- "$_new_files"
+        eved --no-cache -- "$_new_files"
     fi
 }
 

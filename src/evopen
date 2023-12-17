@@ -135,7 +135,7 @@ _override_reader_opts=1
 _fork=0
 _dry_run=1
 
-_evedit_opts=""
+_eved_opts=""
 _evfm_opts=""
 _evmenu_opts=""
 _evterm_opts=""
@@ -341,7 +341,7 @@ _set_program_cmd() {
 
     case $program in
         TERM_EDITOR)
-            _program_cmd="evedit ${_evedit_opts} -- '${_file}'"
+            _program_cmd="eved ${_eved_opts} -- '${_file}'"
             ;;
         TERM_FM)
             _program_cmd="evfm ${_evfm_opts} -- '${_file}'"
@@ -475,7 +475,7 @@ main() {
                 ;;
             -t|--new-term)
                 _open_new_term=0
-                _evedit_opts="${_evedit_opts} --new-term"
+                _eved_opts="${_eved_opts} --new-term"
                 _evfm_opts="${_evfm_opts} --new-term"
                 ;;
             --image-viewer-opts|--iv-opts)
@@ -522,7 +522,7 @@ main() {
                 ;;
             --no-fork)
                 _fork=1
-                _evedit_opts="${_evedit_opts} --no-fork"
+                _eved_opts="${_eved_opts} --no-fork"
                 _evfm_opts="${_evfm_opts} --no-fork"
                 _evterm_opts="${_evterm_opts} --no-fork"
                 ;;

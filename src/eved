@@ -1,18 +1,18 @@
 #!/bin/sh
 #
-#= Evutils - Evedit
+#= Evutils - Eved
 #
 # Edit files using terminal editors.
 #
 #
 #== Synopsis
 # 
-# evedit [options]
-# evedit [options] --dir /dir/path ...
-# evedit [options] /dir1/path:/dir2/path
-# evedit [options] -- /dir/path ...
-# evedit [options] /path/to/file
-# evedit [options] -- /path/to/file
+# eve [options]
+# eve [options] --dir /dir/path ...
+# eve [options] /dir1/path:/dir2/path
+# eve [options] -- /dir/path ...
+# eve [options] /path/to/file
+# eve [options] -- /path/to/file
 #
 #
 #== Options
@@ -40,7 +40,7 @@
 #
 # -h, --use-history
 #    If --file is unset or --dir is unset, pass to search through recently opened
-#    files from evedit.
+#    files from eved.
 #
 # -p prompt, --prompt prompt
 #    Use a different prompt for evsearch. Default is "Edit".

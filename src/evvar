@@ -31,7 +31,7 @@
 #    Viewers:
 #    PAGER = View contents using less (Default)
 #    STDOUT = View contents in stdout
-#    EDITOR = View contents using evedit
+#    EDITOR = View contents using eved
 #    MENU = View contents using evmenu
 # 
 # -t, --new-term
@@ -107,9 +107,9 @@ _file_tree_viewer() {
             ;;
         EDITOR)
             if [ "$_open_new_term" -eq 0 ] && [ "$DISPLAY" ]; then
-                evedit --no-cache --no-fork --new-term -- "$tmp_content_list"
+                eved --no-cache --no-fork --new-term -- "$tmp_content_list"
             else
-                evedit --no-cache --no-fork -- "$tmp_content_list"
+                eved --no-cache --no-fork -- "$tmp_content_list"
             fi
             ;;
         STDOUT)

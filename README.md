@@ -42,6 +42,9 @@ to use and open links.
 #### `evdl`
 - A wrapper for using using `yt-dlp`.
 
+#### `eved`
+- A wrapper for opening a terminal editor.
+
 #### `evemoji`
 - Select an emoji from a menu and copy it to clipboard.
 
@@ -153,7 +156,7 @@ window swallowing)*
 for mounting android devices via MTP)*
 - [`colorpicker`](https://github.com/Jack12816/colorpicker)
 - `sudoedit` and `sudo` from [`sudo`](https://archlinux.org/packages/core/x86_64/sudo/) 
-*(Optional: required for --root option for `evrename` and `evedit`)
+*(Optional: required for --root option for `evrename` and `eved`)
 - [`xwallpaper`](https://github.com/stoeckmann/xwallpaper)
 - `speedtest` from [`speedtest-cli`](https://archlinux.org/packages/extra/any/speedtest-cli/)
 - [`playerctl`](https://github.com/altdesktop/playerctl)

@@ -28,16 +28,16 @@
 _term_opts=""
 _editor=""
 
-_evedit_cmd="evedit --no-cache --no-fork"
+_eved_cmd="eved --no-cache --no-fork"
 
-# Set evedit command.
+# Set eved command.
 #
-_set_evedit_cmd() {
+_set_eved_cmd() {
     if [ "$_editor" ]; then
-        _evedit_cmd="${_evedit_cmd} --editor '${_editor}'"
+        _eved_cmd="${_eved_cmd} --editor '${_editor}'"
     fi
     if [ "$_term_opts" ]; then
-        _evedit_cmd="${_evedit_cmd} --term-opts '${_term_opts}'"
+        _eved_cmd="${_eved_cmd} --term-opts '${_term_opts}'"
     fi
 }
 
@@ -45,7 +45,7 @@ _set_evedit_cmd() {
 #
 _run() {
     tmp=$(mktemp)
-    eval "${_evedit_cmd}" -- "$tmp"
+    eval "${_eved_cmd}" -- "$tmp"
     if ! [ "$(wc -w 2>/dev/null < "$tmp")" -gt 0 ]; then
         log_status "No text written. Exiting..."
         rm -f -- "$tmp"
@@ -80,7 +80,7 @@ main() {
         shift
     done
 
-    _set_evedit_cmd
+    _set_eved_cmd
     _run
 }
 

@@ -14,9 +14,9 @@ EVUTILS_LOGS="$EVUTILS_CACHE_HOME/log"
 EVUTILS_PROGRAM_CACHE="$EVUTILS_CACHE_HOME/programs"
 # Cache of evlaunch's recently launched programs.
 EVLAUNCH_HISTFILE="$EVUTILS_CACHE_HOME/evlaunch-history"
-# Cache of evedit's recently opened files.
-EVEDIT_HISTFILE="$EVUTILS_CACHE_HOME/evedit-history"
-# Cache of evedit's recently opened files.
+# Cache of eved's recently opened files.
+EVED_HISTFILE="$EVUTILS_CACHE_HOME/eved-history"
+# Cache of evopen's recently opened files.
 EVOPEN_HISTFILE="$EVUTILS_CACHE_HOME/evopen-history"
 # Cache of evbookarks's recently opened bookmarks.
 EVBOOKMARKS_HISTFILE="$EVUTILS_CACHE_HOME/evbookmarks-history"
@@ -59,11 +59,11 @@ clear_evlaunch_hist() {
     fi
 }
 
-# Clear evedit's cache.
+# Clear eved's cache.
 #
-clear_evedit_hist() {
-    if [ -f "$EVEDIT_HISTFILE" ]; then
-        printf "" > "$EVEDIT_HISTFILE"
+clear_eved_hist() {
+    if [ -f "$EVED_HISTFILE" ]; then
+        printf "" > "$EVED_HISTFILE"
     fi
 }
 
@@ -95,7 +95,7 @@ clear_evemoji_hist() {
 #
 clear_history() {
     clear_evlaunch_hist
-    clear_evedit_hist
+    clear_eved_hist
     clear_evopen_hist
     clear_evbookmarks_hist
     clear_evemoji_hist
@@ -107,7 +107,7 @@ clear_cache() {
     clear_logs
     clear_program_cache
     clear_evlaunch_hist
-    clear_evedit_hist
+    clear_eved_hist
     clear_evopen_hist
     clear_evbookmarks_hist
     clear_evemoji_hist

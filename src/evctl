@@ -22,8 +22,8 @@
 #    clear-history = Clears all history.
 #    clear-log = Clears logs.
 #    log = Show logs using less.
-#    elog = Show logs using evedit.
-#    update-history = Updates the availability of evopen's and evedit's history
+#    elog = Show logs using eved.
+#    update-history = Updates the availability of evopen's and eved's history
 #    files.
 #    set-browser = Set the browser to use for evutils', programs overwriting the
 #    browser set in configuration file.
@@ -63,11 +63,11 @@ _update_history_files() {
     done
 }
 
-# Updates the availability of evopen's and evedit's history files.
+# Updates the availability of evopen's and eved's history files.
 #
 _update_history() {
     _update_history_files "$EVOPEN_HISTFILE"
-    _update_history_files "$EVEDIT_HISTFILE"
+    _update_history_files "$EVED_HISTFILE"
 }
 
 # Set default browser to use overriding the browser set in configuration
@@ -126,7 +126,7 @@ _run() {
                 ;;
             elog)
                 if [ -e "$EVUTILS_LOGS" ]; then
-                    evedit --no-cache -- "$EVUTILS_LOGS"
+                    eved --no-cache -- "$EVUTILS_LOGS"
                 else
                     log_status "No logs."
                 fi
