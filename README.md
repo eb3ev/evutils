@@ -152,7 +152,8 @@ window swallowing)*
 - [`simple-mtpfs`](https://github.com/phatina/simple-mtpfs) *(Optional: required
 for mounting android devices via MTP)*
 - [`colorpicker`](https://github.com/Jack12816/colorpicker)
-- `sudoedit` from [`sudo`](https://archlinux.org/packages/core/x86_64/sudo/)
+- `sudoedit` and `sudo` from [`sudo`](https://archlinux.org/packages/core/x86_64/sudo/) 
+*(Optional: required for --root option for `evrename` and `evedit`)
 - [`xwallpaper`](https://github.com/stoeckmann/xwallpaper)
 - `speedtest` from [`speedtest-cli`](https://archlinux.org/packages/extra/any/speedtest-cli/)
 - [`playerctl`](https://github.com/altdesktop/playerctl)
@@ -184,13 +185,13 @@ for archiving `.zip` files)*
 ```sh
 # pacman packages
 
-sudo pacman -S --needed fd fzf rofi udisks2 colorpicker sudo xwallpaper speedtest-cli playerctl libpulse libnotify xclip wmctrl xorg-xrandr man-db tar gzip
+sudo pacman -S --needed fd fzf rofi udisks2 colorpicker xwallpaper speedtest-cli playerctl libpulse libnotify xclip wmctrl xorg-xrandr man-db tar gzip
 ```
 
 ```sh
 # Optional pacman packages
 
-sudo pacman -S --needed bzip2 p7zip unzip zip
+sudo pacman -S --needed bzip2 p7zip unzip zip sudo
 ```
 
 ```sh
