@@ -23,11 +23,11 @@ Documentation can be found within the scripts inside `src`.
 
 ## Features
 
+#### `evao`
+- Set the audio output to use, using a menu.
+
 #### `evar`
 - Archive files.
-
-#### `evaudio`
-- Set the audio output to use, using a menu.
 
 #### `evbm`
 - Select and open a bookmarked link into a browser.

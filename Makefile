@@ -11,8 +11,8 @@ ifeq ("$(wildcard ${TARGET})", "")
 	mkdir -p "${TARGET}"
 endif
 	@echo ":: evutils: Copying scripts from ${SRC} to ${TARGET}..."
+	cp ${SRC}/evao ${TARGET}/evao
 	cp ${SRC}/evar ${TARGET}/evar
-	cp ${SRC}/evaudio ${TARGET}/evaudio
 	cp ${SRC}/evbm ${TARGET}/evbm
 	cp ${SRC}/evbrowser ${TARGET}/evbrowser
 	cp ${SRC}/evclip ${TARGET}/evclip
