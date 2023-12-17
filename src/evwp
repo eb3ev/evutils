@@ -1,13 +1,13 @@
 #!/bin/sh
 #
-#= Evutils - Evwall
+#= Evutils - Evwp
 #
 # Wallpaper setter using xwallpaper.
 #
 #
 #== Synopsis
 #
-# evwall [options]
+# evwp [options]
 #
 #
 #== Options

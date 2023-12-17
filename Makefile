@@ -36,8 +36,8 @@ endif
 	cp ${SRC}/evspeedtest ${TARGET}/evspeedtest
 	cp ${SRC}/evterm ${TARGET}/evterm
 	cp ${SRC}/evvar ${TARGET}/evvar
-	cp ${SRC}/evwall ${TARGET}/evwall
 	cp ${SRC}/evwkill ${TARGET}/evwkill
+	cp ${SRC}/evwp ${TARGET}/evwp
 	cp ${SRC}/evwrite ${TARGET}/evwrite
 	cp ${SRC}/evxar ${TARGET}/evxar
 	@echo ":: evutils: Making scripts executable..."

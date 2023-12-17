@@ -100,11 +100,11 @@ to use and open links.
 #### `evvar`
 - View contents of an archive file.
 
-#### `evwall`
-- A wallpaper setter.
-
 #### `evwkill`
 - Kill windows.
+
+#### `evwp`
+- A wallpaper setter.
 
 #### `evwrite`
 - Write text inside a terminal editor and have it's contents copied to clipboard.

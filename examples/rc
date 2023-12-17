@@ -69,13 +69,13 @@ screenlayout_script = "${XDG_CONFIG_HOME:-$HOME/.config}/x11/set-screenlayout"
 screenlayout_presets = "${XDG_CONFIG_HOME:-$HOME/.config}/evutils/screenlayout-presets"
 
 
-#== Wallpaper - evwall
+#== Wallpaper - evwp
 
 # Path to wallpaper setter script file.
 wallpaper_script = "${XDG_CONFIG_HOME:-$HOME/.config}/x11/set-wallpaper"
 # Path to wallpaper presets file.
 screenlayout_presets = "${XDG_CONFIG_HOME:-$HOME/.config}/evutils/wallpaper-presets"
-# Directories to search for wallpapers. If unset, evwall will search for images in /usr/share/wallpapers.
+# Directories to search for wallpapers. If unset, evwp will search for images in /usr/share/wallpapers.
 # List separated by :.
 wallpaper_dirs = "\
 /usr/share/wallpapers:\
