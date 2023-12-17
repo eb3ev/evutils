@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#= Evutils - Evbookmarks
+#= Evutils - Evbm
 #
 # Select bookmarked URLs from a bookmark file using evmenu and open using
 # evbrowser.
