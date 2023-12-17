@@ -7,12 +7,12 @@
 #
 #== Synopsis
 # 
-# eve [options]
-# eve [options] --dir /dir/path ...
-# eve [options] /dir1/path:/dir2/path
-# eve [options] -- /dir/path ...
-# eve [options] /path/to/file
-# eve [options] -- /path/to/file
+# eved [options]
+# eved [options] --dir /dir/path ...
+# eved [options] /dir1/path:/dir2/path
+# eved [options] -- /dir/path ...
+# eved [options] /path/to/file
+# eved [options] -- /path/to/file
 #
 #
 #== Options
