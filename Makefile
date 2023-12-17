@@ -16,10 +16,10 @@ endif
 	cp ${SRC}/evbm ${TARGET}/evbm
 	cp ${SRC}/evbrowser ${TARGET}/evbrowser
 	cp ${SRC}/evclip ${TARGET}/evclip
+	cp ${SRC}/evctl ${TARGET}/evctl
 	cp ${SRC}/evdl ${TARGET}/evdl
 	cp ${SRC}/eved ${TARGET}/eved
 	cp ${SRC}/evemoji ${TARGET}/evemoji
-	cp ${SRC}/evxar ${TARGET}/evxar
 	cp ${SRC}/evfm ${TARGET}/evfm
 	cp ${SRC}/evlaunch ${TARGET}/evlaunch
 	cp ${SRC}/evman ${TARGET}/evman
@@ -35,11 +35,11 @@ endif
 	cp ${SRC}/evsearch ${TARGET}/evsearch
 	cp ${SRC}/evspeedtest ${TARGET}/evspeedtest
 	cp ${SRC}/evterm ${TARGET}/evterm
-	cp ${SRC}/evctl ${TARGET}/evctl
 	cp ${SRC}/evvar ${TARGET}/evvar
 	cp ${SRC}/evwall ${TARGET}/evwall
 	cp ${SRC}/evwkill ${TARGET}/evwkill
 	cp ${SRC}/evwrite ${TARGET}/evwrite
+	cp ${SRC}/evxar ${TARGET}/evxar
 	@echo ":: evutils: Making scripts executable..."
 	chmod +x ${TARGET}/*
 	@echo ":: evutils: Finished installing."
