@@ -48,7 +48,7 @@ to use and open links.
 #### `evemoji`
 - Select an emoji from a menu and copy it to clipboard.
 
-#### `evextract`
+#### `evxar`
 - Extract archive files.
 
 #### `evfm`

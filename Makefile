@@ -19,7 +19,7 @@ endif
 	cp ${SRC}/evdl ${TARGET}/evdl
 	cp ${SRC}/eved ${TARGET}/eved
 	cp ${SRC}/evemoji ${TARGET}/evemoji
-	cp ${SRC}/evextract ${TARGET}/evextract
+	cp ${SRC}/evxar ${TARGET}/evxar
 	cp ${SRC}/evfm ${TARGET}/evfm
 	cp ${SRC}/evlaunch ${TARGET}/evlaunch
 	cp ${SRC}/evman ${TARGET}/evman
