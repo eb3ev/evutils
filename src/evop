@@ -1,18 +1,18 @@
 #!/bin/sh
 #
-#= Evutils - Evopen
+#= Evutils - Evop
 #
 # Open files using their respective programs set in configuration file.
 #
 #
 #== Synopsis
 #
-# evopen [options]
-# evopen [options] --dir /dir/path ...
-# evopen [options] /dir1/path:/dir2/path
-# evopen [options] -- /dir/path ...
-# evopen [options] /path/to/file
-# evopen [options] -- /path/to/file
+# evop [options]
+# evop [options] --dir /dir/path ...
+# evop [options] /dir1/path:/dir2/path
+# evop [options] -- /dir/path ...
+# evop [options] /path/to/file
+# evop [options] -- /path/to/file
 #
 #
 #== Options
@@ -29,11 +29,11 @@
 #    pass multiple --dir.
 # 
 # --no-cache
-#    Don't store recently opened file in a cache file -- $EVOPEN_HISTFILE.
+#    Don't store recently opened file in a cache file -- $EVOP_HISTFILE.
 #
 # -h, --use-history
 #    If --file is unset or --dir is unset, pass to search through recently opened
-#    files from evopen.
+#    files from evop.
 #
 # -s, --swallow
 #    Use a window swallower to swallow the window it the program from the terminal
@@ -161,7 +161,7 @@ _search_dirs() {
 # @returns {path} Path to file.
 #
 _search_history() {
-    eval evmenu "$_evmenu_opts" --fuzzy --prompt "'$_prompt'" < "$EVOPEN_HISTFILE"
+    eval evmenu "$_evmenu_opts" --fuzzy --prompt "'$_prompt'" < "$EVOP_HISTFILE"
 }
 
 # Get the file to open from searches.
@@ -170,21 +170,21 @@ _set_file() {
     selection=""
 
     if [ "$_use_history" -eq 0 ]; then
-        if ! [ -e "$EVOPEN_HISTFILE" ]; then
+        if ! [ -e "$EVOP_HISTFILE" ]; then
             create_cache_dir
-            touch "$EVOPEN_HISTFILE"
+            touch "$EVOP_HISTFILE"
         fi
 
-        if [ "$(wc -w < "$EVOPEN_HISTFILE" 2>/dev/null)" -eq 0 ]; then
+        if [ "$(wc -w < "$EVOP_HISTFILE" 2>/dev/null)" -eq 0 ]; then
             log_status "Open history empty. Exiting..."
             exit
         fi
 
         selection=$(_search_history) 
         if [ "$selection" ]; then
-            if grep -Fqx -e "$selection" -- "$EVOPEN_HISTFILE"; then
+            if grep -Fqx -e "$selection" -- "$EVOP_HISTFILE"; then
                 if ! [ -e "$selection" ]; then
-                    list_rm --file "$EVOPEN_HISTFILE" -- "$selection"
+                    list_rm --file "$EVOP_HISTFILE" -- "$selection"
                     log_error "${selection} no longer exists. Exiting..."
                     exit 1
                 fi
@@ -404,11 +404,11 @@ _run() {
     else
         if [ "$_cache" -eq 0 ]; then
             _file=$(readlink -f "$_file")
-            if [ -e "$EVOPEN_HISTFILE" ]; then
-                move_to_top --file "$EVOPEN_HISTFILE" -- "$_file"
+            if [ -e "$EVOP_HISTFILE" ]; then
+                move_to_top --file "$EVOP_HISTFILE" -- "$_file"
             else
                 create_cache_dir
-                echo "$_file" > "$EVOPEN_HISTFILE"
+                echo "$_file" > "$EVOP_HISTFILE"
             fi
         fi
         eval "$_program_cmd"

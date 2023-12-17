@@ -26,7 +26,7 @@ endif
 	cp ${SRC}/evmenu ${TARGET}/evmenu
 	cp ${SRC}/evmk ${TARGET}/evmk
 	cp ${SRC}/evmount ${TARGET}/evmount
-	cp ${SRC}/evopen ${TARGET}/evopen
+	cp ${SRC}/evop ${TARGET}/evop
 	cp ${SRC}/evpass ${TARGET}/evpass
 	cp ${SRC}/evpause ${TARGET}/evpause
 	cp ${SRC}/evpip ${TARGET}/evpip

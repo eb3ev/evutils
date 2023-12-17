@@ -23,7 +23,7 @@
 #    clear-log = Clears logs.
 #    log = Show logs using less.
 #    elog = Show logs using eved.
-#    update-history = Updates the availability of evopen's and eved's history
+#    update-history = Updates the availability of evop's and eved's history
 #    files.
 #    set-browser = Set the browser to use for evutils', programs overwriting the
 #    browser set in configuration file.
@@ -63,10 +63,10 @@ _update_history_files() {
     done
 }
 
-# Updates the availability of evopen's and eved's history files.
+# Updates the availability of evop's and eved's history files.
 #
 _update_history() {
-    _update_history_files "$EVOPEN_HISTFILE"
+    _update_history_files "$EVOP_HISTFILE"
     _update_history_files "$EVED_HISTFILE"
 }
 

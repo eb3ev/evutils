@@ -69,7 +69,7 @@ to use and open links.
 #### `evmount`
 - A wrapper for mounting removable USB devices or android devices.
 
-#### `evopen`
+#### `evop`
 - Open files using their respective programs.
 
 #### `evpass`
