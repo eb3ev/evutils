@@ -39,6 +39,9 @@ to use and open links.
 #### `evclip`
 - Copy text, path to a file or the current working directory to clipboard.
 
+#### `evcolp`
+- Select and pick a colour from the screen.
+
 #### `evctl`
 - Run commmands that control the behaviour of the other evutils scripts.
 
@@ -78,9 +81,6 @@ to use and open links.
 #### `evpause`
 - A wrapper for pausing, playing or stopping media players.
 - Useful when there are multiple media players running.
-
-#### `evpip`
-- Select and pick a colour from the screen.
 
 #### `evrn`
 - A useful way to rename a file or multiple files in a terminal editor.

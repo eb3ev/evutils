@@ -16,6 +16,7 @@ endif
 	cp ${SRC}/evbm ${TARGET}/evbm
 	cp ${SRC}/evbrowser ${TARGET}/evbrowser
 	cp ${SRC}/evclip ${TARGET}/evclip
+	cp ${SRC}/evcolp ${TARGET}/evcolp
 	cp ${SRC}/evctl ${TARGET}/evctl
 	cp ${SRC}/evdl ${TARGET}/evdl
 	cp ${SRC}/eved ${TARGET}/eved
@@ -29,7 +30,6 @@ endif
 	cp ${SRC}/evop ${TARGET}/evop
 	cp ${SRC}/evpass ${TARGET}/evpass
 	cp ${SRC}/evpause ${TARGET}/evpause
-	cp ${SRC}/evpip ${TARGET}/evpip
 	cp ${SRC}/evrn ${TARGET}/evrn
 	cp ${SRC}/evsl ${TARGET}/evsl
 	cp ${SRC}/evsearch ${TARGET}/evsearch

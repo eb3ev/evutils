@@ -1,16 +1,16 @@
 #!/bin/sh
 #
-#= Evutils -Evpip
+#= Evutils - Evcolp
 #
 # Colour picker / pipette tool using colorpicker (https://github.com/Jack12816/colorpicker)
 #
 #
 #== Synopsis
 #
-# evpip [options]
-# evpip [options] --format format
-# evpip [options] format
-# evpip [options] -- format
+# evcolp [options]
+# evcolp [options] --format format
+# evcolp [options] format
+# evcolp [options] -- format
 #
 #
 #== Options
