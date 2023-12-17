@@ -61,7 +61,7 @@ term_menu_opts = ""
 bookmarks = "${XDG_CONFIG_HOME:-$HOME/.config}/evutils/bookmarks"
 
 
-#== Screenlayout - evscreen
+#== Screenlayout - evsl
 
 # Path to screen layout setter script file.
 screenlayout_script = "${XDG_CONFIG_HOME:-$HOME/.config}/x11/set-screenlayout"

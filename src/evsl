@@ -1,13 +1,13 @@
 #!/bin/sh
 #
-#= Evutils - Evscreen
+#= Evutils - Evsl
 #
 # Screen layout setter using xrandr.
 #
 #
 #== Synopsis
 #
-# evscreen [options]
+# evsl [options]
 #
 #
 #== Options

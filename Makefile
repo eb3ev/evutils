@@ -31,7 +31,7 @@ endif
 	cp ${SRC}/evpause ${TARGET}/evpause
 	cp ${SRC}/evpip ${TARGET}/evpip
 	cp ${SRC}/evrn ${TARGET}/evrn
-	cp ${SRC}/evscreen ${TARGET}/evscreen
+	cp ${SRC}/evsl ${TARGET}/evsl
 	cp ${SRC}/evsearch ${TARGET}/evsearch
 	cp ${SRC}/evspeedtest ${TARGET}/evspeedtest
 	cp ${SRC}/evterm ${TARGET}/evterm

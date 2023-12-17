@@ -23,7 +23,7 @@ evmount
 evopen
 evpause
 evpip
-evscreen
+evsl
 evspeedtest
 evterm
 evwall

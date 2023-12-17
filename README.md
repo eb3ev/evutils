@@ -85,7 +85,7 @@ to use and open links.
 #### `evrn`
 - A useful way to rename a file or multiple files in a terminal editor.
 
-#### `evscreen`
+#### `evsl`
 - A wrapper for setting the X screen layout.
 
 #### `evsearch`
