@@ -1,9 +1,9 @@
 alacritty
-aterm
 android-studio
 arandr
-blueman-manager
+aterm
 blender
+blueman-manager
 brave
 chromium
 code
@@ -49,8 +49,8 @@ loimpress
 lomath
 loweb
 lowriter
-lxterminal
 lxappearance
+lxterminal
 mysql-workbench
 nautilus
 nm-connection-editor
@@ -59,13 +59,13 @@ pcmanfm
 picard
 qutebrowser
 screenkey
+signal-desktop
 soffice
+spotify
 st
 synergy
 terminator
 thunar
-signal-desktop
-spotify
 uxterm
 vlc
 xfce4-terminal
