@@ -4,15 +4,16 @@
 
 [Features](#features) • [Installation](#installation) • [Configuration](#configuration)
 
+Utilitiy POSIX shell scripts for linux.
+
 </div>
 
-Utilitiy POSIX shell scripts for linux.
+<hr>
 
 These scripts serve as a wrapper for several programs to add additional
 functionality or to improve ease of use.
 
 Documentation can be found within the scripts inside `src`.
-
 
 ## Table of Contents
 
