@@ -36,7 +36,7 @@
 #    are shown only by default.
 #
 # --no-cache
-#    Don't store recently opened file in a cache file -- $EVEDIT_HISTFILE.
+#    Don't store recently opened file in a cache file -- $EVED_HISTFILE.
 #
 # -h, --use-history
 #    If --file is unset or --dir is unset, pass to search through recently opened
@@ -111,7 +111,7 @@ _search_dirs() {
 # @returns {path} Path to file.
 #
 _search_history() {
-    eval evmenu "$_evmenu_opts" --fuzzy --prompt "'$_prompt'" < "$EVEDIT_HISTFILE"
+    eval evmenu "$_evmenu_opts" --fuzzy --prompt "'$_prompt'" < "$EVED_HISTFILE"
 }
 
 # Get the file to edit from searches.
@@ -126,21 +126,21 @@ _set_file() {
     fi
 
     if [ "$_use_history" -eq 0 ]; then
-        if ! [ -e "$EVEDIT_HISTFILE" ]; then
+        if ! [ -e "$EVED_HISTFILE" ]; then
             create_cache_dir
-            touch "$EVEDIT_HISTFILE"
+            touch "$EVED_HISTFILE"
         fi
 
-        if [ "$(wc -w < "$EVEDIT_HISTFILE" 2>/dev/null)" -eq 0 ]; then
+        if [ "$(wc -w < "$EVED_HISTFILE" 2>/dev/null)" -eq 0 ]; then
             log_status "Edit history empty. Exiting..."
             exit
         fi
 
         selection=$(_search_history) 
         if [ "$selection" ]; then
-            if grep -Fqx -e "$selection" -- "$EVEDIT_HISTFILE"; then
+            if grep -Fqx -e "$selection" -- "$EVED_HISTFILE"; then
                 if ! [ -e "$selection" ]; then
-                    list_rm --file "$EVEDIT_HISTFILE" -- "$selection"
+                    list_rm --file "$EVED_HISTFILE" -- "$selection"
                     log_error "${selection} no longer exists. Exiting..."
                     exit 1
                 fi
@@ -218,11 +218,11 @@ _run() {
     else
         if [ "$_cache" -eq 0 ]; then
             _file=$(readlink -f "$_file")
-            if [ -e "$EVEDIT_HISTFILE" ]; then
-                move_to_top --file "$EVEDIT_HISTFILE" -- "$_file"
+            if [ -e "$EVED_HISTFILE" ]; then
+                move_to_top --file "$EVED_HISTFILE" -- "$_file"
             else
                 create_cache_dir
-                echo "$_file" > "$EVEDIT_HISTFILE"
+                echo "$_file" > "$EVED_HISTFILE"
             fi
         fi
         eval "$_editor_cmd"
