@@ -106,13 +106,13 @@ to use and open links.
 #### `evwkill`
 - Kill windows.
 
-#### `evxar`
-- Extract archive files.
-
 #### `evwrite`
 - Write text inside a terminal editor and have it's contents copied to clipboard.
 - Useful when you want to input text somewhere else but would prefer to use your
 favourite terminal editor for it.
+
+#### `evxar`
+- Extract archive files.
 
 ## Installation
 
