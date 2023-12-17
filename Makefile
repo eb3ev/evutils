@@ -17,7 +17,7 @@ endif
 	cp ${SRC}/evbrowser ${TARGET}/evbrowser
 	cp ${SRC}/evclip ${TARGET}/evclip
 	cp ${SRC}/evdl ${TARGET}/evdl
-	cp ${SRC}/evedit ${TARGET}/evedit
+	cp ${SRC}/eved ${TARGET}/eved
 	cp ${SRC}/evemoji ${TARGET}/evemoji
 	cp ${SRC}/evextract ${TARGET}/evextract
 	cp ${SRC}/evfm ${TARGET}/evfm
