@@ -47,9 +47,9 @@ is_natural_num() {
     return 1
 }
 
-# Returns true if it's a natural number and false otherwise.
+# Returns true if it's a whole number and false otherwise.
 # @param {string} 1 The string to check.
-# @returns True if it's a natural number and false otherwise.
+# @returns True if it's a whole number and false otherwise.
 #
 is_whole_num() {
     case $1 in
