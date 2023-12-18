@@ -523,9 +523,6 @@ get_col() {
                 ;;
             -i|--idx)
                 if is_natural_num "$2"; then
-                    if [ "$2" -le 0 ]; then
-                        return 1
-                    fi
                     idx=$2
                 else
                     return 1
@@ -586,9 +583,6 @@ get_row() {
                 ;;
             -i|--idx)
                 if is_natural_num "$2"; then
-                    if [ "$2" -le 0 ]; then
-                        return 1
-                    fi
                     idx=$2
                 else
                     return 1
@@ -601,11 +595,11 @@ get_row() {
     done
 
     if [ "$stdin" -eq 0 ]; then
-        sed -n "${idx} p"
+        sed -n "${idx}p"
     elif [ "$file" ]; then
-        sed -n "${idx} p" "$file"
+        sed -n "${idx}p" "$file"
     elif [ "$list" ]; then
-        echo "$list" | sed -n "${idx} p"
+        echo "$list" | sed -n "${idx}p"
     fi
 }
 
@@ -660,9 +654,6 @@ get_val() {
                 ;;
             -i|--idx)
                 if is_natural_num "$2"; then
-                    if [ "$2" -le 1 ]; then
-                        return 1
-                    fi
                     idx=$2
                 else
                     return 1
