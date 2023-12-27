@@ -25,8 +25,8 @@
 #    elog = Show logs using eved.
 #    update-history = Updates the availability of evop's and eved's history
 #    files.
-#    set-browser = Set the browser to use for evutils', programs overwriting the
-#    browser set in configuration file.
+#    set-browser = Set the browser to use for browser related evutils programs,
+#    overwriting the browser set in configuration file.
 #
 # -h, --help
 #    List available commands
@@ -47,7 +47,7 @@ clear-log,Clears logs.
 log,Show logs using less.
 elog,Show logs using eved.
 update-history,Updates the availability of evop's and eved's history files.
-set-browser,Set the browser to use for evutils', programs overwriting the browser set in configuration file.\
+set-browser,Set the browser to use for browser related evutils programs, overwriting the browser set in configuration file.\
 "
 
 _cmds=""
