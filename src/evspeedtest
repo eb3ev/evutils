@@ -28,18 +28,15 @@ _pre() {
 #
 _run() {
     log_status "Running speedtest..."
-    speedtest_result=$(speedtest --simple --secure 2>/dev/null)
+    speedtest_result=$(speedtest --csv --secure 2>/dev/null)
     if ! [ "$speedtest_result" ]; then
         log_error "No Internet Connection. Exiting..."
         exit 1
     fi
-    ping=$(get_row --idx 1 --list "$speedtest_result")
-    download_speed=$(get_row --idx 2 --list "$speedtest_result")
-    upload_speed=$(get_row --idx 3 --list "$speedtest_result")
-    ping="${ping##*: }"
-    download_speed="${download_speed##*: }"
-    upload_speed="${upload_speed##*: }"
-    log_status "${ping}  ${download_speed}  ${upload_speed}"
+    ping=$(get_col --idx 6 --delim "," --list "$speedtest_result")
+    download_speed=$(get_col --idx 7 --delim "," --list "$speedtest_result")
+    upload_speed=$(get_col --idx 8 --delim "," --list "$speedtest_result")
+    log_status "${ping} ms  ${download_speed} Mbit/s  ${upload_speed} Mbit/s"
 }
 
 main() {
