@@ -22,8 +22,9 @@
 #    Pass if root access is need to rename files.
 #
 # -e editor, --editor editor
-#    The terminal editor to use. If unset, the term_editor set in configuration file is used.
-#
+#    The terminal editor to use. If unset, the term_editor set in configuration
+#    file is used.
+
 
 
 . "$EVUTILS_HOME/lib/log"

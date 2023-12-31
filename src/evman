@@ -35,6 +35,7 @@
 #    Attempt to use the --term option for evmenu.
 
 
+
 . "$EVUTILS_HOME/lib/log"
 . "$EVUTILS_HOME/lib/program"
 . "$EVUTILS_HOME/lib/list"

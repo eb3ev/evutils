@@ -28,6 +28,7 @@
 #    Open evfm to the directory the device was mounted in.
 
 
+
 . "$EVUTILS_HOME/lib/log"
 . "$EVUTILS_HOME/lib/mount"
 . "$EVUTILS_HOME/lib/list"
