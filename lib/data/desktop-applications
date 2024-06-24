@@ -2,6 +2,7 @@ alacritty
 android-studio
 arandr
 aterm
+atlauncher
 blender
 blueman-manager
 brave
@@ -51,9 +52,11 @@ loweb
 lowriter
 lxappearance
 lxterminal
+minecraft-launcher
 mysql-workbench
 nautilus
 nm-connection-editor
+openttd
 pavucontrol
 pcmanfm
 picard
@@ -63,6 +66,7 @@ signal-desktop
 soffice
 spotify
 st
+steam
 synergy
 terminator
 thunar
